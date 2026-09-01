@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RouteCard from '../../components/RouteCard.astro';
+import CommunityCTA from '../../components/CommunityCTA.astro';
+import { primaryActions } from '../../data/site';
+import { routes } from '../../data/routes';
+---
+
+<BaseLayout
+  title="Find a Bike Bus"
+  description="See which Bike Bus routes are rolling in Chico, find the one headed to your school, and roll with the group."
+  path="/routes/"
+>
+  <section class="section section--tight">
+    <div class="container container--narrow center-text stack">
+      <p class="eyebrow">Find a Bike Bus</p>
+      <h1>Find your route.</h1>
+      <p class="lede">
+        These are the Bike Buses rolling in Chico right now. Find the one headed to
+        your school, pick a stop that works for your family, and come ride with us.
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="route-grid">
+        {routes.map((route) => <RouteCard route={route} />)}
+
+        <article class="invite-card">
+          <h2 class="invite-card__title">Your school could be next.</h2>
+          <p>
+            Don't see a route for your school? Bike Buses start with a few families
+            and a good idea. Bike Bus Chico can help you get one rolling.
+          </p>
+          <a class="btn btn--primary" href={primaryActions.start.href}>Start a Bike Bus</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <CommunityCTA
+    heading="Not sure where to start?"
+    text="Join the community and ask — route leaders and Chico families are happy to help you find your first ride."
+    variant="warm"
+    actions={['join', 'start']}
+  />
+</BaseLayout>
+
+<style>
+  .route-grid {
+    display: grid;
+    gap: var(--space-m);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 22rem));
+    justify-content: center;
+    align-items: stretch;
+  }
+  .invite-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+    padding: var(--space-l);
+    border-radius: var(--radius);
+    background: linear-gradient(150deg, var(--blue-900), var(--blue-700));
+    color: var(--cream-50);
+  }
+  .invite-card__title {
+    font-size: var(--step-2);
+    margin: 0;
+    color: var(--white);
+  }
+  .invite-card p {
+    margin: 0;
+    color: var(--cream-100);
+    opacity: 0.9;
+  }
+  .invite-card .btn {
+    margin-top: auto;
+  }
+</style>

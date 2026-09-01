@@ -1,0 +1,64 @@
+---
+import { primaryActions } from '../data/site';
+
+export interface Props {
+  /** Optional heading above the actions. */
+  heading?: string;
+  /** Optional supporting line under the heading. */
+  text?: string;
+  /** Visual treatment. "blue" = dark band, "warm" = cream band. */
+  variant?: 'blue' | 'warm';
+  /** Which of the three actions to show, in order. Defaults to all three. */
+  actions?: Array<'find' | 'join' | 'start'>;
+}
+
+const {
+  heading = "Ready to roll?",
+  text = 'Three ways to be part of Bike Bus Chico — find a ride near you, join the community, or start a route at your own school.',
+  variant = 'blue',
+  actions = ['find', 'join', 'start'],
+} = Astro.props;
+
+const sectionClass = variant === 'blue' ? 'section section--blue' : 'section section--warm';
+
+// The middle action gets primary styling; the others are secondary.
+const actionList = actions.map((key) => primaryActions[key]);
+---
+
+<section class={sectionClass} aria-labelledby="community-cta-heading">
+  <div class="container center-text cta-inner">
+    <h2 id="community-cta-heading">{heading}</h2>
+    {text && <p class="lede mx-auto">{text}</p>}
+    <div class="cta-actions">
+      {
+        actionList.map((action, i) => {
+          const primary = actions[i] === 'join';
+          const external = 'external' in action && action.external;
+          return (
+            <a
+              href={action.href}
+              class:list={['btn', 'btn--lg', primary ? 'btn--primary' : 'btn--secondary']}
+              target={external ? '_blank' : undefined}
+              rel={external ? 'noopener noreferrer' : undefined}
+            >
+              {action.label}
+            </a>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta-inner {
+    max-width: 46rem;
+  }
+  .cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+    justify-content: center;
+    margin-top: var(--space-l);
+  }
+</style>

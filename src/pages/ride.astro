@@ -1,0 +1,174 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CommunityCTA from '../components/CommunityCTA.astro';
+import { primaryActions } from '../data/site';
+
+const faqs = [
+  {
+    q: 'Do I need to register?',
+    a: [
+      'No. Just show up and ride.',
+      'Parents are encouraged to introduce themselves to the route leader, especially if they plan to ride regularly.',
+    ],
+  },
+  {
+    q: 'Does an adult need to come?',
+    a: [
+      'Bike Bus Chico is a community group ride, not child care or school transportation. Families are responsible for deciding what level of adult supervision is appropriate for their child. Younger and less experienced riders should ride with an adult.',
+    ],
+  },
+  {
+    q: 'How fast do we ride?',
+    a: [
+      'At a kid-friendly pace. The goal is to keep the group together, not get to school as fast as possible.',
+    ],
+  },
+  {
+    q: "What if we're late?",
+    a: [
+      'Join at a later stop if you can. Please don\u2019t rush or take risks trying to catch the group.',
+    ],
+  },
+  {
+    q: 'What if my child is nervous?',
+    a: [
+      'Come try part of the route. Starting at a later stop is an easy way to make the first ride shorter.',
+    ],
+  },
+  {
+    q: 'What about weather or smoke?',
+    a: [
+      "Ride leaders use judgment based on weather, air quality, route conditions, and school schedules. When conditions are questionable, check your route\u2019s Bike Bus Chico community updates before leaving home.",
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Riding With Us"
+  description="How to ride the Bike Bus in Chico — find a route, meet at a stop, and roll with the group. No registration required."
+  path="/ride/"
+>
+  <section class="section section--tight">
+    <div class="container container--narrow center-text stack">
+      <p class="eyebrow">Riding With Us</p>
+      <h1>Riding the Bike Bus is easy.</h1>
+      <p class="lede">
+        Find a route, meet us at a stop, and roll with the group. You don't need to
+        make riding to school an everyday habit to join the Bike Bus. Come when it
+        works for your family.
+      </p>
+      <p class="cta-row">
+        <a class="btn btn--primary" href={primaryActions.find.href}>Find a Bike Bus</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <h2 class="center-text">Common questions</h2>
+      <div class="faq stack">
+        {
+          faqs.map((item) => (
+            <details class="faq__item">
+              <summary class="faq__q">
+                <span>{item.q}</span>
+                <span class="faq__icon" aria-hidden="true" />
+              </summary>
+              <div class="faq__a">
+                {item.a.map((p) => (
+                  <p>{p}</p>
+                ))}
+              </div>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <CommunityCTA
+    heading="Ready to roll?"
+    text="Find a route near you, or join the community to ask questions before your first ride."
+    variant="warm"
+    actions={['find', 'join']}
+  />
+</BaseLayout>
+
+<style>
+  .cta-row {
+    margin: var(--space-xs) 0 0;
+  }
+  .faq {
+    margin-top: var(--space-m);
+  }
+  .faq__item {
+    background: var(--white);
+    border: 1px solid color-mix(in srgb, var(--blue-700) 12%, white);
+    border-radius: var(--radius);
+    padding: 0 var(--space-m);
+  }
+  .faq__item[open] {
+    border-color: color-mix(in srgb, var(--blue-700) 28%, white);
+  }
+  .faq__q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s);
+    padding: var(--space-s) 0;
+    font-weight: 700;
+    color: var(--blue-900);
+    cursor: pointer;
+    list-style: none;
+  }
+  .faq__q::-webkit-details-marker {
+    display: none;
+  }
+  .faq__icon {
+    position: relative;
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+  }
+  .faq__icon::before,
+  .faq__icon::after {
+    content: '';
+    position: absolute;
+    background: var(--orange-500);
+    border-radius: 2px;
+  }
+  .faq__icon::before {
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    transform: translateY(-50%);
+  }
+  .faq__icon::after {
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+    transition: opacity 0.15s ease;
+  }
+  .faq__item[open] .faq__icon::after {
+    opacity: 0;
+  }
+  .faq__a {
+    padding: 0 0 var(--space-s);
+    color: var(--ink);
+  }
+  .faq__a p {
+    margin: 0 0 var(--space-2xs);
+  }
+  .faq__a p:last-child {
+    margin-bottom: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq__icon::after {
+      transition: none;
+    }
+  }
+</style>

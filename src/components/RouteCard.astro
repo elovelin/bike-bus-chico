@@ -1,0 +1,131 @@
+---
+import type { Route } from '../data/routes';
+import { statusMeta } from '../data/routes';
+
+export interface Props {
+  route: Route;
+}
+
+const { route } = Astro.props;
+const status = statusMeta[route.status];
+---
+
+<article class="route-card card">
+  <div class="route-card__head">
+    <span class:list={['status-badge', `status-badge--${status.tone}`]}>{status.label}</span>
+    <span class="route-card__day">{route.day}</span>
+  </div>
+
+  <h3 class="route-card__title">
+    <a href={`/routes/${route.slug}`}>{route.name}</a>
+  </h3>
+
+  <p class="route-card__summary">{route.summary}</p>
+
+  <dl class="route-card__facts">
+    <div>
+      <dt>School</dt>
+      <dd>{route.school}</dd>
+    </div>
+    <div>
+      <dt>Distance</dt>
+      <dd>{route.distance}</dd>
+    </div>
+    <div>
+      <dt>Arrive</dt>
+      <dd>{route.arrivalTime}</dd>
+    </div>
+  </dl>
+
+  <a class="route-card__cta" href={`/routes/${route.slug}`}>
+    Explore this route
+    <span aria-hidden="true">→</span>
+  </a>
+</article>
+
+<style>
+  .route-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    height: 100%;
+  }
+  .route-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs);
+  }
+  .route-card__day {
+    font-weight: 700;
+    color: var(--blue-700);
+    font-size: var(--step--1);
+  }
+  .status-badge {
+    display: inline-block;
+    font-size: var(--step--1);
+    font-weight: 700;
+    padding: 0.2em 0.7em;
+    border-radius: 999px;
+    line-height: 1.4;
+  }
+  .status-badge--active {
+    background: color-mix(in srgb, var(--green-600) 16%, white);
+    color: var(--green-600);
+  }
+  .status-badge--forming {
+    background: color-mix(in srgb, var(--orange-500) 18%, white);
+    color: #9a5410;
+  }
+  .status-badge--paused {
+    background: color-mix(in srgb, var(--muted) 18%, white);
+    color: var(--muted);
+  }
+  .route-card__title {
+    font-size: var(--step-2);
+    margin: 0;
+  }
+  .route-card__title a {
+    color: var(--blue-900);
+    text-decoration: none;
+  }
+  .route-card__title a:hover {
+    text-decoration: underline;
+  }
+  .route-card__summary {
+    color: var(--muted);
+    margin: 0;
+  }
+  .route-card__facts {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: var(--space-xs);
+    margin: var(--space-2xs) 0 0;
+  }
+  .route-card__facts dt {
+    font-size: var(--step--2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0;
+  }
+  .route-card__facts dd {
+    margin: 0.15rem 0 0;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: var(--step--1);
+  }
+  .route-card__cta {
+    margin-top: auto;
+    padding-top: var(--space-xs);
+    font-weight: 700;
+    color: var(--orange-500);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+  }
+  .route-card__cta:hover {
+    text-decoration: underline;
+  }
+</style>

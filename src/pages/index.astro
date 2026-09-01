@@ -1,0 +1,470 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CommunityCTA from '../components/CommunityCTA.astro';
+import RouteCard from '../components/RouteCard.astro';
+import PhotoGrid from '../components/PhotoGrid.astro';
+import { primaryActions, headerCta } from '../data/site';
+import { routes } from '../data/routes';
+
+// Does the hero photo exist yet? If not, show a warm placeholder — never a broken image.
+const heroSrc = '/photos/hero.jpg';
+const heroExists = (() => {
+  try {
+    return fs.existsSync(path.join(process.cwd(), 'public', heroSrc.replace(/^\//, '')));
+  } catch {
+    return false;
+  }
+})();
+
+const benefits = [
+  { title: 'Joy', body: 'The trip to school becomes something kids can look forward to.' },
+  { title: 'Community', body: 'Kids make connections and parents meet neighbors while moving through Chico together.' },
+  { title: 'Confidence', body: 'Riding together helps kids build bike skills, independence, and comfort getting around their community.' },
+  { title: 'Fewer car trips', body: 'More families on bikes means fewer cars competing for space around school at drop-off.' },
+];
+
+const steps = [
+  { n: 1, title: 'Find your route', body: 'See which Bike Bus is headed to your school.' },
+  { n: 2, title: 'Meet us along the way', body: 'Start with the group or join at a listed stop.' },
+  { n: 3, title: 'Roll together', body: 'Ride at a kid-friendly pace and arrive at school with the crew.' },
+];
+
+const discordUses = [
+  'Route communities',
+  'Ride announcements',
+  'Questions and tips',
+  'Photos from the ride',
+  'Chances to help or start something new',
+];
+
+const galleryPhotos = [
+  { src: '/photos/ride-01.jpg', alt: 'Kids and parents riding together down a Chico street' },
+  { src: '/photos/ride-02.jpg', alt: 'A young rider smiling mid-ride with the group' },
+  { src: '/photos/ride-03.jpg', alt: 'The Bike Bus crew rolling past Bidwell Park' },
+];
+---
+
+<BaseLayout path="/">
+  {/* 1 — HERO */}
+  <section class="hero">
+    <div class="container container--wide hero__inner">
+      <div class="hero__copy">
+        <p class="eyebrow">Bike Bus Chico</p>
+        <h1 class="hero__title">Ride to school. Together.</h1>
+        <p class="lede">
+          Bike Bus Chico brings kids and families together to ride to school as a
+          group — turning the morning trip into community, movement, independence,
+          and fun.
+        </p>
+        <div class="hero__actions">
+          <a class="btn btn--primary btn--lg" href={primaryActions.find.href}>Find a Bike Bus</a>
+          <a
+            class="btn btn--secondary btn--lg"
+            href={headerCta.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Join the Community
+          </a>
+        </div>
+      </div>
+
+      <div class="hero__media">
+        {
+          heroExists ? (
+            <img src={heroSrc} alt="Chico families riding to school together on the Bike Bus" width="720" height="560" />
+          ) : (
+            <div class="hero__placeholder" role="img" aria-label="Bike Bus riders on their way to school">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="5.5" cy="17.5" r="3.5" />
+                <circle cx="18.5" cy="17.5" r="3.5" />
+                <path d="M5.5 17.5 10 8h5l-2.5 9.5M15 8l2.5 9.5M9 8h4" />
+              </svg>
+              <p>Add <code>public/photos/hero.jpg</code> to feature a real ride here.</p>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  {/* 2 — WHAT IS A BIKE BUS */}
+  <section class="section">
+    <div class="container container--narrow center-text stack">
+      <p class="eyebrow">What is a Bike Bus?</p>
+      <h2>A school bus. On bikes.</h2>
+      <p class="lede">
+        A Bike Bus is a group of kids and adults who ride to school together along
+        a set route. Like a school bus, it has a route, stops, and a schedule — but
+        the wheels are powered by us.
+      </p>
+      <p class="measure mx-auto">
+        Families can meet at the beginning or join at a stop along the way. The
+        group rolls together at a kid-friendly pace and arrives at school as one
+        big crew.
+      </p>
+    </div>
+  </section>
+
+  {/* 3 — WHY BIKE BUS */}
+  <section class="section section--warm">
+    <div class="container">
+      <div class="center-text stack section-head">
+        <p class="eyebrow">Why Bike Bus?</p>
+        <h2>Better mornings start on two wheels.</h2>
+      </div>
+      <ul class="benefits" role="list">
+        {
+          benefits.map((b) => (
+            <li class="benefit card">
+              <h3 class="benefit__title">{b.title}</h3>
+              <p class="benefit__body">{b.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="benefits__closing center-text">
+        Building community. Reducing traffic. Creating healthy habits — one ride at a time.
+      </p>
+    </div>
+  </section>
+
+  {/* 4 — ROLLING IN CHICO */}
+  <section class="section">
+    <div class="container">
+      <div class="center-text stack section-head">
+        <p class="eyebrow">Chico routes</p>
+        <h2>Bike Bus is rolling in Chico.</h2>
+        <p class="lede measure mx-auto">
+          Neighborhood routes are bringing Chico families together for the ride to
+          school — and we're just getting started.
+        </p>
+      </div>
+
+      <div class="route-grid">
+        {routes.map((route) => <RouteCard route={route} />)}
+
+        <article class="invite-card">
+          <h3 class="invite-card__title">Your school could be next.</h3>
+          <p>
+            Don't see a route for your school? Bike Buses start with a few families
+            and a good idea. Bike Bus Chico can help you get one rolling.
+          </p>
+          <a class="btn btn--primary" href={primaryActions.start.href}>Start a Bike Bus</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {/* 5 — COME RIDE WITH US */}
+  <section class="section section--warm">
+    <div class="container">
+      <div class="center-text stack section-head">
+        <p class="eyebrow">Riding</p>
+        <h2>Come ride with us.</h2>
+        <p class="lede measure mx-auto">
+          You don't need to be a serious cyclist or commit to riding every week.
+          Find a route, choose a stop, grab your helmet, and join when it works for
+          your family.
+        </p>
+      </div>
+
+      <ol class="steps" role="list">
+        {
+          steps.map((step) => (
+            <li class="step">
+              <span class="step__num" aria-hidden="true">{step.n}</span>
+              <h3 class="step__title">{step.title}</h3>
+              <p class="step__body">{step.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="center-text">
+        <a class="btn btn--secondary btn--lg" href="/ride/">How to ride with us</a>
+      </div>
+    </div>
+  </section>
+
+  {/* 6 — COMMUNITY / DISCORD */}
+  <section class="section section--blue">
+    <div class="container community">
+      <div class="community__copy stack">
+        <p class="eyebrow">Community</p>
+        <h2>The ride is just the beginning.</h2>
+        <p class="lede">
+          Bike Bus Chico lives between rides on Discord. It's where families
+          connect, route leaders share updates, new riders ask questions, and the
+          community keeps growing.
+        </p>
+        <a
+          class="btn btn--primary btn--lg"
+          href={headerCta.href}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Join Bike Bus Chico on Discord
+        </a>
+      </div>
+      <ul class="community__list" role="list">
+        {discordUses.map((use) => <li>{use}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  {/* 7 — START ONE */}
+  <section class="section">
+    <div class="container container--narrow center-text stack">
+      <p class="eyebrow">Start a route</p>
+      <h2>No Bike Bus at your school? Start one.</h2>
+      <p class="lede">
+        Bike Buses don't need to start big. A few families, a comfortable route,
+        and a consistent morning are enough to get rolling.
+      </p>
+      <p class="measure mx-auto">
+        Bike Bus Chico can help you think through the route, stops and timing;
+        create maps and shareable materials; connect with other leaders; and add
+        your route to BikeBusChico.com.
+      </p>
+      <div>
+        <a class="btn btn--primary btn--lg" href={primaryActions.start.href}>
+          Learn how to start a Bike Bus
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {/* 8 — PHOTOGRAPHY */}
+  <section class="section section--warm">
+    <div class="container">
+      <div class="center-text stack section-head">
+        <p class="eyebrow">On the ride</p>
+        <h2>This is the fun part.</h2>
+        <p class="lede measure mx-auto">
+          Friends. Music. Bikes. Fresh air. And a very different kind of school morning.
+        </p>
+      </div>
+      <PhotoGrid photos={galleryPhotos} />
+    </div>
+  </section>
+
+  {/* 9 — FINAL INVITATION */}
+  <CommunityCTA
+    heading="Let's get more kids rolling."
+    text="Ride with an existing Bike Bus, connect with the Chico community, or bring one to your school."
+    variant="blue"
+  />
+</BaseLayout>
+
+<style>
+  /* 1 — Hero */
+  .hero {
+    background: linear-gradient(160deg, var(--cream-50) 0%, var(--cream-100) 100%);
+    padding-block: var(--space-2xl);
+  }
+  .hero__inner {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+  @media (min-width: 52rem) {
+    .hero__inner {
+      grid-template-columns: 1.05fr 0.95fr;
+    }
+  }
+  .hero__title {
+    font-size: var(--step-5);
+    line-height: 1.02;
+    margin: var(--space-2xs) 0 var(--space-xs);
+    color: var(--blue-900);
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+    margin-top: var(--space-l);
+  }
+  .hero__media img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    display: block;
+  }
+  .hero__placeholder {
+    aspect-ratio: 5 / 4;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    text-align: center;
+    padding: var(--space-l);
+    color: var(--blue-700);
+    background:
+      repeating-linear-gradient(
+        45deg,
+        color-mix(in srgb, var(--blue-700) 7%, var(--cream-50)),
+        color-mix(in srgb, var(--blue-700) 7%, var(--cream-50)) 14px,
+        var(--cream-50) 14px,
+        var(--cream-50) 28px
+      );
+    border: 1px dashed color-mix(in srgb, var(--blue-700) 32%, white);
+  }
+  .hero__placeholder p {
+    margin: 0;
+    font-size: var(--step--1);
+    color: var(--muted);
+    max-width: 28ch;
+  }
+  .hero__placeholder code {
+    background: color-mix(in srgb, var(--blue-700) 12%, white);
+    padding: 0.1em 0.4em;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+
+  .section-head {
+    margin-bottom: var(--space-xl);
+  }
+
+  /* 3 — Benefits */
+  .benefits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-m);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 40rem) {
+    .benefits {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 64rem) {
+    .benefits {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .benefit__title {
+    font-size: var(--step-1);
+    color: var(--blue-900);
+    margin: 0 0 var(--space-3xs);
+  }
+  .benefit__body {
+    margin: 0;
+    color: var(--muted);
+  }
+  .benefits__closing {
+    margin-top: var(--space-xl);
+    font-weight: 700;
+    font-size: var(--step-1);
+    color: var(--blue-700);
+  }
+
+  /* 4 — Routes */
+  .route-grid {
+    display: grid;
+    gap: var(--space-m);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 22rem));
+    justify-content: center;
+    align-items: stretch;
+  }
+  .invite-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+    padding: var(--space-l);
+    border-radius: var(--radius);
+    background: linear-gradient(150deg, var(--blue-900), var(--blue-700));
+    color: var(--cream-50);
+  }
+  .invite-card__title {
+    font-size: var(--step-2);
+    margin: 0;
+    color: var(--white);
+  }
+  .invite-card p {
+    margin: 0;
+    color: var(--cream-100);
+    opacity: 0.9;
+  }
+  .invite-card .btn {
+    margin-top: auto;
+  }
+
+  /* 5 — Steps */
+  .steps {
+    list-style: none;
+    margin: 0 0 var(--space-xl);
+    padding: 0;
+    display: grid;
+    gap: var(--space-m);
+    grid-template-columns: 1fr;
+    counter-reset: step;
+  }
+  @media (min-width: 48rem) {
+    .steps {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .step {
+    background: var(--cream-50);
+    border-radius: var(--radius);
+    padding: var(--space-l);
+    border: 1px solid color-mix(in srgb, var(--blue-700) 12%, white);
+  }
+  .step__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    background: var(--orange-500);
+    color: var(--blue-900);
+    font-weight: 800;
+    font-size: var(--step-1);
+    margin-bottom: var(--space-xs);
+  }
+  .step__title {
+    margin: 0 0 var(--space-3xs);
+    font-size: var(--step-1);
+    color: var(--blue-900);
+  }
+  .step__body {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  /* 6 — Community */
+  .community {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+  @media (min-width: 52rem) {
+    .community {
+      grid-template-columns: 1.15fr 0.85fr;
+    }
+  }
+  .community__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2xs);
+  }
+  .community__list li {
+    padding: var(--space-s) var(--space-m);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, white 10%, transparent);
+    border: 1px solid color-mix(in srgb, white 18%, transparent);
+    font-weight: 600;
+  }
+</style>

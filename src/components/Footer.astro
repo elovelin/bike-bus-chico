@@ -1,0 +1,151 @@
+---
+import { site, nav, socialLinks } from '../data/site';
+
+const year = new Date().getFullYear();
+
+// Only show social links that have a real destination set (not "#").
+const activeSocial = socialLinks.filter((link) => {
+  if (link.label === 'Email') return true;
+  return link.url && link.url !== '#';
+});
+---
+
+<footer class="site-footer">
+  <div class="container container--wide footer-grid">
+    <div class="footer-brand">
+      <img
+        src="/brand/bike-bus-chico-wordmark-horizontal.svg"
+        alt={site.name}
+        width="1152"
+        height="224"
+        class="footer-wordmark"
+      />
+      <p class="footer-line">Ride to school together in {site.location}.</p>
+    </div>
+
+    <nav class="footer-nav" aria-label="Footer">
+      <h2 class="footer-heading">Explore</h2>
+      <ul>
+        {nav.map((item) => (
+          <li><a href={item.href}>{item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="footer-connect">
+      <h2 class="footer-heading">Connect</h2>
+      <ul>
+        {
+          activeSocial.map((link) => (
+            <li>
+              <a
+                href={link.url}
+                target={link.label === 'Email' ? undefined : '_blank'}
+                rel={link.label === 'Email' ? undefined : 'noopener noreferrer'}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="container container--wide footer-fineprint">
+    <p>
+      Bike Bus Chico is a volunteer, parent-led community effort. We're not a
+      nonprofit, a school program, or a transportation provider — just neighbors
+      riding to school together.
+    </p>
+    <p class="footer-copy">© {year} {site.name}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--blue-900);
+    color: var(--cream-100);
+    padding-block: var(--space-xl) var(--space-l);
+    margin-top: var(--space-2xl);
+  }
+
+  .footer-grid {
+    display: grid;
+    gap: var(--space-l);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 40rem) {
+    .footer-grid {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-s);
+  }
+  .footer-wordmark {
+    display: block;
+    height: 48px;
+    width: auto;
+    background: #fbf3ee;
+    border-radius: var(--radius-sm);
+  }
+  .footer-line {
+    color: var(--cream-100);
+    opacity: 0.8;
+    margin: 0.25rem 0 0;
+    max-width: 34ch;
+  }
+
+  .footer-heading {
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--orange-400);
+    margin: 0 0 var(--space-xs);
+  }
+  .footer-nav ul,
+  .footer-connect ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3xs);
+  }
+  .footer-nav a,
+  .footer-connect a {
+    color: var(--cream-100);
+    text-decoration: none;
+    padding-block: 0.25rem;
+    display: inline-block;
+  }
+  .footer-nav a:hover,
+  .footer-connect a:hover {
+    color: var(--white);
+    text-decoration: underline;
+  }
+
+  .footer-fineprint {
+    margin-top: var(--space-l);
+    padding-top: var(--space-m);
+    border-top: 1px solid rgba(247, 242, 232, 0.15);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-s);
+  }
+  .footer-fineprint p {
+    font-size: var(--step--1);
+    color: var(--cream-100);
+    opacity: 0.75;
+    margin: 0;
+    max-width: 60ch;
+  }
+  .footer-copy {
+    white-space: nowrap;
+  }
+</style>

@@ -1,0 +1,355 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CommunityCTA from '../../components/CommunityCTA.astro';
+import { headerCta } from '../../data/site';
+import { routes, statusMeta, type Route } from '../../data/routes';
+
+export function getStaticPaths() {
+  return routes.map((route) => ({
+    params: { slug: route.slug },
+    props: { route },
+  }));
+}
+
+interface Props {
+  route: Route;
+}
+
+const { route } = Astro.props;
+const status = statusMeta[route.status];
+
+// Graceful asset handling — only link/show files that actually exist in /public.
+const publicHas = (p?: string): boolean => {
+  if (!p) return false;
+  try {
+    return fs.existsSync(path.join(process.cwd(), 'public', p.replace(/^\//, '')));
+  } catch {
+    return false;
+  }
+};
+const hasMap = publicHas(route.mapImage);
+const hasPdf = publicHas(route.routePdf);
+
+const facts = [
+  { label: 'School', value: route.school },
+  { label: 'Day', value: route.day },
+  { label: 'Start', value: route.startTime },
+  { label: 'Arrive', value: route.arrivalTime },
+  { label: 'Distance', value: route.distance },
+  { label: 'Status', value: status.label },
+];
+---
+
+<BaseLayout
+  title={route.name}
+  description={route.summary}
+  path={`/routes/${route.slug}/`}
+>
+  {/* Header */}
+  <section class="section section--tight">
+    <div class="container container--narrow stack">
+      <p class="crumb"><a href="/routes/">← All routes</a></p>
+      <span class:list={['status-badge', `status-badge--${status.tone}`]}>{status.label}</span>
+      <h1>{route.name}</h1>
+      <p class="lede">{route.summary}</p>
+    </div>
+  </section>
+
+  {/* Facts */}
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <dl class="facts">
+        {
+          facts.map((f) => (
+            <div class="fact">
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  {/* Stops timeline */}
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <h2>Stops &amp; times</h2>
+      <ol class="timeline" role="list">
+        {
+          route.stops.map((stop, i) => (
+            <li class="timeline__item">
+              <div class="timeline__marker" aria-hidden="true">
+                <span class="timeline__dot" />
+                {i < route.stops.length - 1 && <span class="timeline__line" />}
+              </div>
+              <div class="timeline__body">
+                <p class="timeline__time">{stop.time}</p>
+                <p class="timeline__name">{stop.name}</p>
+                {stop.note && <p class="timeline__note">{stop.note}</p>}
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="arrive-note">
+        Please arrive a few minutes early. The Bike Bus won't leave a listed stop
+        before its scheduled time.
+      </p>
+    </div>
+  </section>
+
+  {/* Map */}
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <h2>Route map</h2>
+      {
+        hasMap ? (
+          <figure class="map">
+            <img src={route.mapImage} alt={`Map of the ${route.name} Bike Bus route`} loading="lazy" />
+          </figure>
+        ) : (
+          <div class="map-placeholder">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z" />
+              <path d="M9 4v14M15 6v14" />
+            </svg>
+            <p>A route map will appear here once it's added.</p>
+          </div>
+        )
+      }
+      {
+        hasPdf && (
+          <p class="map-actions">
+            <a class="btn btn--secondary" href={route.routePdf} target="_blank" rel="noopener noreferrer">
+              Download printable route (PDF)
+            </a>
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  {/* This week / Discord */}
+  <section class="section section--tight">
+    <div class="container container--narrow updates">
+      <h2>This week's ride</h2>
+      <p class="measure">
+        Weather, air quality, and school schedules can change a ride. For this
+        week's updates, join the Bike Bus Chico community on Discord — it's where
+        this route shares what's happening before each ride.
+      </p>
+      <a
+        class="btn btn--primary"
+        href={headerCta.href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Get this route's updates on Discord
+      </a>
+      <p class="ride-link">
+        New to riding with us? <a href="/ride/">Read how the Bike Bus works →</a>
+      </p>
+    </div>
+  </section>
+
+  <CommunityCTA
+    heading="See you on the ride."
+    text="Come ride this route, connect with the community, or start a Bike Bus at your own school."
+    variant="blue"
+  />
+</BaseLayout>
+
+<style>
+  .crumb {
+    margin: 0;
+    font-size: var(--step--1);
+  }
+  .crumb a {
+    color: var(--blue-700);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .crumb a:hover {
+    text-decoration: underline;
+  }
+
+  .status-badge {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: var(--step--1);
+    font-weight: 700;
+    padding: 0.3em 0.75em;
+    border-radius: 999px;
+    width: max-content;
+  }
+  .status-badge::before {
+    content: '';
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .status-badge--active {
+    background: color-mix(in srgb, var(--green-600) 14%, white);
+    color: var(--green-600);
+  }
+  .status-badge--forming {
+    background: color-mix(in srgb, var(--orange-500) 18%, white);
+    color: color-mix(in srgb, var(--orange-500) 82%, black);
+  }
+  .status-badge--paused {
+    background: color-mix(in srgb, var(--muted) 16%, white);
+    color: var(--muted);
+  }
+
+  /* Facts */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-s);
+    margin: 0;
+  }
+  @media (min-width: 40rem) {
+    .facts {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .fact {
+    background: var(--cream-50);
+    border: 1px solid color-mix(in srgb, var(--blue-700) 12%, white);
+    border-radius: var(--radius);
+    padding: var(--space-s) var(--space-m);
+  }
+  .fact dt {
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 0.15em;
+  }
+  .fact dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--blue-900);
+  }
+
+  /* Timeline */
+  .timeline {
+    list-style: none;
+    margin: var(--space-m) 0 0;
+    padding: 0;
+  }
+  .timeline__item {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: var(--space-s);
+  }
+  .timeline__marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .timeline__dot {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--orange-500);
+    border: 3px solid var(--white);
+    box-shadow: 0 0 0 2px var(--orange-500);
+    margin-top: 0.35rem;
+    flex: none;
+  }
+  .timeline__line {
+    width: 2px;
+    flex: 1;
+    background: color-mix(in srgb, var(--blue-700) 22%, white);
+    margin: 0.25rem 0;
+  }
+  .timeline__body {
+    padding-bottom: var(--space-m);
+  }
+  .timeline__time {
+    margin: 0.2rem 0 0;
+    font-weight: 800;
+    color: var(--blue-900);
+  }
+  .timeline__name {
+    margin: 0.1rem 0 0;
+    color: var(--ink);
+  }
+  .timeline__note {
+    margin: 0.25rem 0 0;
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+  .arrive-note {
+    margin-top: var(--space-s);
+    padding: var(--space-s) var(--space-m);
+    background: color-mix(in srgb, var(--orange-500) 10%, white);
+    border-left: 4px solid var(--orange-500);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--ink);
+  }
+
+  /* Map */
+  .map {
+    margin: var(--space-m) 0 0;
+  }
+  .map img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    display: block;
+    border: 1px solid color-mix(in srgb, var(--blue-700) 12%, white);
+  }
+  .map-placeholder {
+    margin-top: var(--space-m);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    text-align: center;
+    padding: var(--space-xl) var(--space-l);
+    color: var(--blue-700);
+    background:
+      repeating-linear-gradient(
+        45deg,
+        color-mix(in srgb, var(--blue-700) 6%, var(--cream-50)),
+        color-mix(in srgb, var(--blue-700) 6%, var(--cream-50)) 14px,
+        var(--cream-50) 14px,
+        var(--cream-50) 28px
+      );
+    border: 1px dashed color-mix(in srgb, var(--blue-700) 30%, white);
+    border-radius: var(--radius);
+  }
+  .map-placeholder p {
+    margin: 0;
+    color: var(--muted);
+  }
+  .map-actions {
+    margin-top: var(--space-m);
+  }
+
+  .updates {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-s);
+  }
+  .updates h2 {
+    margin: 0;
+  }
+  .ride-link {
+    margin: 0;
+    font-size: var(--step--1);
+  }
+  .ride-link a {
+    color: var(--blue-700);
+    font-weight: 600;
+  }
+</style>

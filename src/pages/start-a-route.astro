@@ -1,0 +1,157 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CommunityCTA from '../components/CommunityCTA.astro';
+
+const steps = [
+  {
+    title: 'Find a few families.',
+    text: 'You only need a handful to start. A couple of families riding together is already a Bike Bus.',
+  },
+  {
+    title: 'Choose a comfortable route.',
+    text: 'Pick streets and paths that feel calm and doable for kids — not the fastest way, the friendliest way.',
+  },
+  {
+    title: 'Work backward from the school arrival time.',
+    text: 'Decide when you need to arrive, then set your start time and stops from there.',
+  },
+  {
+    title: 'Test ride it at kid pace.',
+    text: 'Ride the route yourself, slowly, and see how long it really takes with kids in mind.',
+  },
+  {
+    title: 'Choose a consistent day.',
+    text: 'A regular day — even just once a week — is what turns a ride into a Bike Bus.',
+  },
+  {
+    title: 'Recruit adult helpers.',
+    text: 'A few grown-ups riding along makes everyone more comfortable, especially at the front and back.',
+  },
+  {
+    title: 'Invite families.',
+    text: 'Spread the word at school, with neighbors, and in the community. Make it easy to just show up.',
+  },
+  {
+    title: 'Ride, learn, and adjust.',
+    text: 'Your first rides will teach you what works. Change stops and timing as you go.',
+  },
+];
+
+const support = [
+  'Think through a route',
+  'Develop stops and timing',
+  'Make a shareable route map',
+  'Create stop and timing graphics',
+  'Add the route to BikeBusChico.com',
+  'Connect leaders with the Bike Bus Chico community',
+  'Share lessons from other Chico routes',
+];
+---
+
+<BaseLayout
+  title="Start a Bike Bus"
+  description="No Bike Bus at your school yet? Here's how to start one in Chico — a simple, family-friendly sequence, with help from the Bike Bus Chico community."
+  path="/start-a-route/"
+>
+  <section class="section section--tight">
+    <div class="container container--narrow center-text stack">
+      <p class="eyebrow">Start a Bike Bus</p>
+      <h1>You can do this.</h1>
+      <p class="lede">
+        And you don't have to figure it out alone. Starting a Bike Bus isn't
+        founding an organization — it's a few families deciding to ride to school
+        together, on a regular day. Here's a simple way to begin.
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container container--narrow">
+      <ol class="steps stack">
+        {
+          steps.map((step, i) => (
+            <li class="step">
+              <span class="step__num" aria-hidden="true">{i + 1}</span>
+              <div class="step__body">
+                <h2 class="step__title">{step.title}</h2>
+                <p class="step__text">{step.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--blue">
+    <div class="container container--narrow stack">
+      <h2>We'll help you get rolling.</h2>
+      <p class="measure">
+        You bring the families and the local knowledge. Bike Bus Chico can help
+        with the rest. We can help:
+      </p>
+      <ul class="support">
+        {support.map((item) => <li>{item}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <CommunityCTA
+    heading="Let's start one together."
+    text="Join the community and tell us about your school. We'll help you take the first step."
+    variant="warm"
+    actions={['join', 'find']}
+  />
+</BaseLayout>
+
+<style>
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: none;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 2.75rem 1fr;
+    gap: var(--space-s);
+    align-items: start;
+  }
+  .step__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--orange-500);
+    color: var(--white);
+    font-weight: 800;
+    font-size: var(--step-1);
+    flex: none;
+  }
+  .step__title {
+    margin: 0.2rem 0 0;
+    font-size: var(--step-1);
+    color: var(--blue-900);
+  }
+  .step__text {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+  }
+  .support {
+    margin: 0;
+    padding-left: 1.25rem;
+    columns: 1;
+  }
+  .support li {
+    margin: 0 0 var(--space-2xs);
+    color: var(--cream-50);
+  }
+  @media (min-width: 40rem) {
+    .support {
+      columns: 2;
+      column-gap: var(--space-l);
+    }
+  }
+</style>

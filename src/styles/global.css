@@ -1,0 +1,370 @@
+/* ==========================================================================
+   Bike Bus Chico — Global styles & design tokens
+   Brand: joyful, neighborly, community-led. Blue = structure, Orange = energy,
+   Cream = warmth. Moderate rounding. Intentional orange, never flooded.
+   ========================================================================== */
+
+/* ---- Design tokens ---- */
+:root {
+  /* Palette */
+  --blue-900: #12345b;
+  --blue-700: #1e4f7a;
+  --orange-500: #f28c28;
+  --orange-400: #f5a23a;
+  --cream-100: #f7f2e8;
+  --cream-50: #fcfaf5;
+  --ink: #17212b;
+  --muted: #66717d;
+  --white: #ffffff;
+
+  /* Restrained supporting green (used sparingly for "go"/success moments) */
+  --green-600: #2f7d54;
+
+  /* Semantic roles */
+  --bg: var(--cream-50);
+  --bg-warm: var(--cream-100);
+  --surface: var(--white);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --heading: var(--blue-900);
+  --link: var(--blue-700);
+  --link-hover: var(--blue-900);
+  --border: #e6ddcb;
+
+  /* Typography — friendly system sans, personality via scale/weight */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-sans);
+
+  /* Fluid type scale */
+  --step--1: clamp(0.83rem, 0.79rem + 0.2vw, 0.94rem);
+  --step-0: clamp(1rem, 0.95rem + 0.25vw, 1.13rem);
+  --step-1: clamp(1.2rem, 1.11rem + 0.45vw, 1.5rem);
+  --step-2: clamp(1.44rem, 1.28rem + 0.8vw, 2rem);
+  --step-3: clamp(1.73rem, 1.47rem + 1.3vw, 2.66rem);
+  --step-4: clamp(2.07rem, 1.67rem + 2vw, 3.55rem);
+  --step-5: clamp(2.49rem, 1.9rem + 2.95vw, 4.2rem);
+
+  /* Spacing scale */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-s: 1rem;
+  --space-m: 1.5rem;
+  --space-l: 2.25rem;
+  --space-xl: 3.5rem;
+  --space-2xl: 5rem;
+  --space-3xl: 7rem;
+
+  /* Rounding — moderate, not pill-everywhere */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px; /* reserved for genuine pills only */
+
+  /* Shadows — soft, minimal */
+  --shadow-sm: 0 1px 2px rgba(18, 52, 91, 0.06), 0 2px 6px rgba(18, 52, 91, 0.06);
+  --shadow-md: 0 4px 12px rgba(18, 52, 91, 0.1), 0 12px 28px rgba(18, 52, 91, 0.08);
+
+  /* Layout */
+  --content-max: 68rem;
+  --content-wide: 82rem;
+  --content-narrow: 46rem;
+
+  --focus-ring: 3px solid var(--orange-500);
+}
+
+/* ---- Reset / base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  color: var(--heading);
+  line-height: 1.15;
+  margin: 0 0 var(--space-s);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--step-4);
+}
+h2 {
+  font-size: var(--step-3);
+}
+h3 {
+  font-size: var(--step-1);
+}
+
+p {
+  margin: 0 0 var(--space-s);
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--link-hover);
+}
+
+img,
+svg,
+picture {
+  max-width: 100%;
+  display: block;
+  height: auto;
+}
+
+ul,
+ol {
+  margin: 0 0 var(--space-s);
+  padding-left: 1.25rem;
+}
+
+strong {
+  font-weight: 700;
+}
+
+/* ---- Accessibility ---- */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--blue-900);
+  color: var(--white);
+  padding: var(--space-2xs) var(--space-s);
+  border-radius: 0 0 var(--radius) 0;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Layout helpers ---- */
+.container {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--space-m);
+}
+.container--wide {
+  max-width: var(--content-wide);
+}
+.container--narrow {
+  max-width: var(--content-narrow);
+}
+
+.section {
+  padding-block: var(--space-2xl);
+}
+.section--tight {
+  padding-block: var(--space-xl);
+}
+.section--warm {
+  background: var(--bg-warm);
+}
+.section--blue {
+  background: var(--blue-900);
+  color: var(--cream-100);
+}
+.section--blue h1,
+.section--blue h2,
+.section--blue h3 {
+  color: var(--white);
+}
+.section--blue a {
+  color: var(--orange-400);
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: var(--step--1);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orange-500);
+  margin-bottom: var(--space-2xs);
+}
+.section--blue .eyebrow {
+  color: var(--orange-400);
+}
+
+.lede {
+  font-size: var(--step-1);
+  color: var(--text-muted);
+  max-width: 40ch;
+}
+.section--blue .lede {
+  color: var(--cream-100);
+  opacity: 0.9;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-heading);
+  font-size: var(--step-0);
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 0.8em 1.4em;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease,
+    color 0.12s ease;
+  min-height: 44px; /* tap target */
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Primary — orange bg, dark-blue text (meets contrast) */
+.btn--primary {
+  background: var(--orange-500);
+  color: var(--blue-900);
+  border-color: var(--orange-500);
+}
+.btn--primary:hover {
+  background: var(--orange-400);
+  border-color: var(--orange-400);
+  color: var(--blue-900);
+}
+
+/* Secondary — blue outline */
+.btn--secondary {
+  background: transparent;
+  color: var(--blue-700);
+  border-color: var(--blue-700);
+}
+.btn--secondary:hover {
+  background: var(--blue-700);
+  color: var(--white);
+}
+
+/* Secondary on dark backgrounds */
+.section--blue .btn--secondary {
+  color: var(--cream-100);
+  border-color: var(--cream-100);
+}
+.section--blue .btn--secondary:hover {
+  background: var(--cream-100);
+  color: var(--blue-900);
+}
+
+/* Ghost — quiet tertiary */
+.btn--ghost {
+  background: transparent;
+  color: var(--blue-700);
+  border-color: transparent;
+  padding-inline: 0.6em;
+}
+.btn--ghost:hover {
+  color: var(--blue-900);
+  text-decoration: underline;
+}
+
+.btn--lg {
+  font-size: var(--step-1);
+  padding: 0.9em 1.6em;
+}
+
+/* ---- Cards ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-l);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Utility ---- */
+.stack > * + * {
+  margin-top: var(--space-s);
+}
+.center-text {
+  text-align: center;
+}
+.center-text h2,
+.center-text .lede {
+  text-wrap: balance;
+}
+.center-text .lede {
+  margin-inline: auto;
+}
+.measure {
+  max-width: var(--content-narrow);
+}
+.mx-auto {
+  margin-inline: auto;
+}
+
+/* ---- Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .btn:hover {
+    transform: none;
+  }
+}

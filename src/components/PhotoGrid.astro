@@ -1,0 +1,120 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+
+export interface Photo {
+  /** Path under /public, e.g. "/photos/ride-01.jpg". */
+  src: string;
+  /** Descriptive alt text. Also used as the placeholder label. */
+  alt: string;
+}
+
+export interface Props {
+  photos: Photo[];
+  /** Layout hint: "hero" = one large, "grid" = even tiles. */
+  variant?: 'grid' | 'feature';
+}
+
+const { photos, variant = 'grid' } = Astro.props;
+
+// Check at build time whether each photo actually exists in /public.
+// Missing photos render as warm placeholder tiles — never broken <img>.
+const publicDir = path.join(process.cwd(), 'public');
+const resolved = photos.map((photo) => {
+  const filePath = path.join(publicDir, photo.src.replace(/^\//, ''));
+  let exists = false;
+  try {
+    exists = fs.existsSync(filePath);
+  } catch {
+    exists = false;
+  }
+  return { ...photo, exists };
+});
+---
+
+<div class:list={['photo-grid', `photo-grid--${variant}`]}>
+  {
+    resolved.map((photo) =>
+      photo.exists ? (
+        <figure class="photo-grid__item">
+          <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" />
+        </figure>
+      ) : (
+        <div class="photo-grid__item photo-grid__item--placeholder" role="img" aria-label={photo.alt}>
+          <span class="photo-grid__placeholder-mark" aria-hidden="true">
+            {/* simple bike glyph */}
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="5.5" cy="17.5" r="3.5" />
+              <circle cx="18.5" cy="17.5" r="3.5" />
+              <path d="M5.5 17.5 10 8h5l-2.5 9.5M15 8l2.5 9.5M9 8h4" />
+            </svg>
+          </span>
+          <span class="photo-grid__placeholder-label">{photo.alt}</span>
+        </div>
+      )
+    )
+  }
+</div>
+
+<style>
+  .photo-grid {
+    display: grid;
+    gap: var(--space-s);
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: 48rem) {
+    .photo-grid--grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .photo-grid--feature {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .photo-grid--feature .photo-grid__item:first-child {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+  }
+
+  .photo-grid__item {
+    margin: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background: var(--cream-100);
+  }
+  .photo-grid__item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .photo-grid__item--placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3xs);
+    text-align: center;
+    padding: var(--space-s);
+    color: var(--blue-700);
+    background:
+      repeating-linear-gradient(
+        45deg,
+        color-mix(in srgb, var(--blue-700) 6%, var(--cream-100)),
+        color-mix(in srgb, var(--blue-700) 6%, var(--cream-100)) 12px,
+        var(--cream-100) 12px,
+        var(--cream-100) 24px
+      );
+    border: 1px dashed color-mix(in srgb, var(--blue-700) 30%, white);
+  }
+  .photo-grid__placeholder-mark {
+    opacity: 0.7;
+  }
+  .photo-grid__placeholder-label {
+    font-size: var(--step--2);
+    color: var(--muted);
+    max-width: 22ch;
+    line-height: 1.3;
+  }
+</style>
