@@ -117,7 +117,7 @@ export const routes: Route[] = [
         note: 'Gather a few minutes early — this is where we roll out.',
       },
       {
-        name: 'CSU Chico Stop Sign',
+        name: 'Flashing Stop Sign on Warner at CSU Chico',
         time: '8:08 AM',
       },
       {
