@@ -99,6 +99,35 @@ export const routes: Route[] = [
     mapImage: '/routes/hancock-park-map.png',
     routePdf: '/routes/hancock-park-route.pdf',
   },
+  {
+    slug: 'west-chico-ccds',
+    name: 'West Chico → Chico Country Day School',
+    school: 'Chico Country Day School',
+    day: 'Fridays',
+    startTime: '8:00 AM',
+    arrivalTime: '8:15 AM',
+    distance: '~1.5 miles',
+    status: 'forming',
+    summary:
+      'A short, flat roll from the west side. We gather at the Warner St. Orchard, cruise past CSU Chico, and arrive together at Chico Country Day School — a quick, friendly ride that\u2019s perfect for newer riders.',
+    stops: [
+      {
+        name: 'Warner St. Orchard',
+        time: '8:00 AM',
+        note: 'Gather a few minutes early — this is where we roll out.',
+      },
+      {
+        name: 'CSU Chico Stop Sign',
+        time: '8:08 AM',
+      },
+      {
+        name: 'Chico Country Day School',
+        time: '8:15 AM',
+        note: 'Arrive together, with time to spare before the bell.',
+      },
+    ],
+    mapImage: '/routes/west-chico-map.png',
+  },
 ];
 
 /** Look up a single route by its slug. */
