@@ -106,7 +106,7 @@ export const routes: Route[] = [
     day: 'Fridays',
     startTime: '8:00 AM',
     arrivalTime: '8:15 AM',
-    distance: '~1.5 miles',
+    distance: '2.1 miles',
     status: 'forming',
     summary:
       'A short, flat roll from the west side. We gather at the Warner St. Orchard, cruise past CSU Chico, and arrive together at Chico Country Day School — a quick, friendly ride that\u2019s perfect for newer riders.',
