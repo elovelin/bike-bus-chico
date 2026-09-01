@@ -31,7 +31,7 @@ const steps = [
   { n: 3, title: 'Roll together', body: 'Ride at a kid-friendly pace and arrive at school with the crew.' },
 ];
 
-const discordUses = [
+const communityUses = [
   'Route communities',
   'Ride announcements',
   'Questions and tips',
@@ -196,21 +196,17 @@ const galleryPhotos = [
         <p class="eyebrow">Community</p>
         <h2>The ride is just the beginning.</h2>
         <p class="lede">
-          Bike Bus Chico lives between rides on Discord. It's where families
-          connect, route leaders share updates, new riders ask questions, and the
-          community keeps growing.
+          Bike Bus Chico keeps going between rides. Families connect, route
+          leaders share updates, and new riders ask questions. Day-to-day
+          coordination happens in our community Discord — it's invite-only for
+          now, so email us and we'll get you connected.
         </p>
-        <a
-          class="btn btn--primary btn--lg"
-          href={headerCta.href}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Join Bike Bus Chico on Discord
+        <a class="btn btn--primary btn--lg" href={headerCta.href}>
+          {headerCta.label}
         </a>
       </div>
       <ul class="community__list" role="list">
-        {discordUses.map((use) => <li>{use}</li>)}
+        {communityUses.map((use) => <li>{use}</li>)}
       </ul>
     </div>
   </section>

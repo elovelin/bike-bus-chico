@@ -5,8 +5,6 @@
  * social links, navigation, and the reusable calls-to-action.
  *
  * Non-developers: it's safe to edit the text inside the quotes below.
- * When you have the real Discord and Instagram links, paste them in place
- * of the "#" placeholders.
  */
 
 export interface SocialLink {
@@ -34,10 +32,6 @@ export const site = {
     'Bike Bus Chico brings kids and families together to ride to school as a group — building community, confidence, and better mornings on two wheels.',
   contactEmail: 'hello@bikebuschico.com',
 
-  /** Social + community links. Replace "#" with real URLs when you have them. */
-  discordUrl: '#',
-  instagramUrl: '#',
-
   /** City / area context (used in copy and SEO). */
   location: 'Chico, California',
 } as const;
@@ -55,13 +49,13 @@ export const nav: NavItem[] = [
 ];
 
 /**
- * The header call-to-action. Joining the community (Discord) is the
- * single most important next step, so it lives in the header.
+ * The header call-to-action. Getting involved is the single most important
+ * next step, so it lives in the header. It opens an email — we connect new
+ * families to the community personally, rather than via a public join link.
  */
 export const headerCta: CallToAction = {
-  label: 'Join the Community',
-  href: site.discordUrl,
-  external: true,
+  label: 'Get Involved',
+  href: `mailto:${site.contactEmail}`,
 };
 
 /**
@@ -71,16 +65,13 @@ export const headerCta: CallToAction = {
 export const primaryActions = {
   find: { label: 'Find a Bike Bus', href: '/routes/' } satisfies CallToAction,
   join: {
-    label: 'Join the Community',
-    href: site.discordUrl,
-    external: true,
+    label: 'Get Involved',
+    href: `mailto:${site.contactEmail}`,
   } satisfies CallToAction,
   start: { label: 'Start a Bike Bus', href: '/start-a-route/' } satisfies CallToAction,
 } as const;
 
-/** Footer social links (only shown when a real URL is set). */
+/** Footer links. Email is our public contact; community coordination is invite-only. */
 export const socialLinks: SocialLink[] = [
-  { label: 'Discord', url: site.discordUrl },
-  { label: 'Instagram', url: site.instagramUrl },
   { label: 'Email', url: `mailto:${site.contactEmail}` },
 ];
