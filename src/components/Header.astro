@@ -17,12 +17,12 @@ const ctaRel = headerCta.external ? 'noopener noreferrer' : undefined;
   <div class="container container--wide header-inner">
     <a href="/" class="brand" aria-label={`${site.name} — home`}>
       <img
-        src="/brand/bike-bus-chico-wordmark-horizontal.svg"
-        alt={site.name}
-        width="1152"
-        height="224"
-        class="brand-wordmark"
+        src="/brand/bike-bus-chico-graphic.svg"
+        alt=""
+        aria-hidden="true"
+        class="brand-graphic"
       />
+      <span class="brand-text">Bike Bus <span class="brand-accent">Chico</span></span>
     </a>
 
     <button
@@ -80,19 +80,47 @@ const ctaRel = headerCta.external ? 'noopener noreferrer' : undefined;
   .brand {
     display: inline-flex;
     align-items: center;
+    gap: 0.6rem;
     text-decoration: none;
     line-height: 0;
   }
-  .brand-wordmark {
+  .brand-graphic {
     display: block;
-    height: 42px;
+    height: 40px;
     width: auto;
-    background: #fbf3ee;
-    border-radius: var(--radius-sm);
+  }
+  .brand-text {
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    font-size: 1.4rem;
+    white-space: nowrap;
+    color: var(--cream-100);
+  }
+  .brand-accent {
+    color: var(--orange-500);
+  }
+  /* Subtle motion: the graphic rolls forward on hover/focus. */
+  @keyframes brand-roll {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(3px); }
+  }
+  .brand:hover .brand-graphic,
+  .brand:focus-visible .brand-graphic {
+    animation: brand-roll 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .brand:hover .brand-graphic,
+    .brand:focus-visible .brand-graphic {
+      animation: none;
+    }
   }
   @media (max-width: 40rem) {
-    .brand-wordmark {
-      height: 34px;
+    .brand-graphic {
+      height: 32px;
+    }
+    .brand-text {
+      font-size: 1.2rem;
     }
   }
 
