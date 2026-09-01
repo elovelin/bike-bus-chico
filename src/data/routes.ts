@@ -37,6 +37,10 @@ export interface Route {
   /** Approximate distance, e.g. "~4.5 miles". */
   distance: string;
   status: RouteStatus;
+  /** Name of the volunteer who leads this route, e.g. "Eric Lovelin". */
+  leaderName?: string;
+  /** Email for reaching this route's leader directly to join or ask questions. */
+  leaderEmail?: string;
   /** One or two friendly sentences for cards and the route header. */
   summary: string;
   /** Ordered list of stops, first to last. */
@@ -64,6 +68,8 @@ export const routes: Route[] = [
     arrivalTime: '~8:10 AM',
     distance: '~4.5 miles',
     status: 'active',
+    leaderName: 'Eric Lovelin',
+    leaderEmail: 'ericlovelin@outlook.com',
     summary:
       'Our founding route. Families gather at Hancock Park and roll out together, picking up more riders at stops along the way to Bidwell Park before continuing across town to Chico Country Day School — arriving in plenty of time for the 8:25 bell.',
     stops: [
