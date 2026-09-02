@@ -26,11 +26,11 @@ export interface CallToAction {
 
 export const site = {
   name: 'Bike Bus Chico',
-  domain: 'https://bikebuschico.com',
+  domain: 'https://bikebuschico.org',
   tagline: 'Ride to School Together',
   description:
     'Bike Bus Chico brings kids and families together to ride to school as a group — building community, confidence, and better mornings on two wheels.',
-  contactEmail: 'hello@bikebuschico.com',
+  contactEmail: 'hello@bikebuschico.org',
 
   /** City / area context (used in copy and SEO). */
   location: 'Chico, California',

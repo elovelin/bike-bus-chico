@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bikebuschico.com/sitemap-index.xml
+Sitemap: https://bikebuschico.org/sitemap-index.xml

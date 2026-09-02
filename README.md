@@ -2,7 +2,7 @@
 
 The website for **Bike Bus Chico**, a volunteer-led community bike bus program in Chico, CA.
 
-Live site: **[bikebuschico.com](https://bikebuschico.com)**
+Live site: **[bikebuschico.org](https://bikebuschico.org)**
 
 This site is intentionally simple. It's built to be fast, easy to run on a plain
 laptop, and friendly to edit even if you've never touched code. Everything you'll
@@ -141,7 +141,7 @@ hosts sites like this for free.
    - **Build command:** `npm run build`
    - **Build output directory:** `dist`
 4. Click deploy. Cloudflare builds the site and gives you a live web address.
-5. In Cloudflare, add your custom domain **bikebuschico.com** under the project's
+5. In Cloudflare, add your custom domain **bikebuschico.org** under the project's
    **Custom domains** tab and follow the prompts.
 
 After that first setup, **every time you save a change to GitHub, Cloudflare
