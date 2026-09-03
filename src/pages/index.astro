@@ -51,7 +51,6 @@ const galleryPhotos = [
   <section class="hero">
     <div class="container container--wide hero__inner">
       <div class="hero__copy">
-        <p class="eyebrow">Bike Bus Chico</p>
         <h1 class="hero__title">Ride to school. Together.</h1>
         <p class="lede">
           Bike Bus Chico brings kids and families together to ride to school as a
@@ -286,6 +285,9 @@ const galleryPhotos = [
   .hero__media img {
     width: 100%;
     height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    object-position: center 30%;
     border-radius: var(--radius-lg);
     display: block;
   }
