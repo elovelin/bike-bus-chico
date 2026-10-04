@@ -1,0 +1,6 @@
+---
+import { statusMeta, type RouteStatus } from '../data/routes';
+interface Props { status: RouteStatus }
+const { status } = Astro.props;
+---
+<span class:list={['status', status]}><span class="accent-dot" aria-hidden="true"></span>{statusMeta[status].label}</span>

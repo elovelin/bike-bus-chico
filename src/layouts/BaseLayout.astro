@@ -20,7 +20,7 @@ const {
   title,
   description = site.description,
   path,
-  ogImage = '/brand/bike-bus-chico-wordmark.png',
+  ogImage = '/brand/path3/social.png',
   exactTitle = false,
 } = Astro.props;
 
@@ -39,6 +39,7 @@ const ogImageUrl = new URL(ogImage, site.domain).href;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="preload" href="/brand/path3/fonts/LilitaOne-Regular.ttf" as="font" type="font/ttf" crossorigin />
 
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
@@ -57,13 +58,13 @@ const ogImageUrl = new URL(ogImage, site.domain).href;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
 
-    <meta name="theme-color" content="#12345b" />
+    <meta name="theme-color" content="#1A56C8" />
     <meta name="generator" content={Astro.generator} />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip" href="#main">Skip to content</a>
     <Header />
-    <main id="main">
+    <main id="main" tabindex="-1">
       <slot />
     </main>
     <Footer />

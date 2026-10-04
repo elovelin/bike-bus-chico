@@ -1,97 +1,33 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CommunityCTA from '../components/CommunityCTA.astro';
-
 const values = [
-  {
-    title: 'Joy',
-    text: 'Kids should look forward to the trip.',
-  },
-  {
-    title: 'Community',
-    text: 'A Bike Bus connects families and neighborhoods.',
-  },
-  {
-    title: 'Confidence',
-    text: 'Kids learn that bikes can be transportation, not just recreation.',
-  },
-  {
-    title: 'Access',
-    text: 'More Chico families should have a practical opportunity to participate in active transportation.',
-  },
+  { title: 'Joy', text: 'Kids should look forward to the trip.' },
+  { title: 'Community', text: 'A Bike Bus connects families and neighborhoods.' },
+  { title: 'Confidence', text: 'Kids learn that bikes can be transportation, not just recreation.' },
+  { title: 'Access', text: 'More Chico families should have a practical opportunity to participate in active transportation.' },
 ];
 ---
-
-<BaseLayout
-  title="About"
-  description="Bike Bus Chico is a community-led effort to help Chico families ride to school together."
-  path="/about/"
->
-  <section class="section section--tight">
-    <div class="container container--narrow stack">
-      <p class="eyebrow">About</p>
-      <h1>A better way to get to school.</h1>
-      <p class="lede">
-        Bike Bus Chico is a community-led effort to help Chico families ride to
-        school together.
-      </p>
-      <p class="measure">
-        The idea is simple: the morning trip to school can be more than a car line.
-        It can be exercise, independence, friendship, music, fresh air, and a chance
-        to experience Chico at bike speed.
-      </p>
-      <p class="measure">
-        Our rides are organized by local parents and volunteers. As more families
-        and schools become interested, Bike Bus Chico helps new neighborhood routes
-        get rolling.
-      </p>
+<BaseLayout title="About" description="Bike Bus Chico is a community-led effort to help Chico families ride to school together." path="/about/">
+  <section class="page-heading"><div class="wrap">
+    <p class="eyebrow">About Bike Bus Chico</p><h1>Kids. Families.<br />Our hometown.</h1>
+    <p class="lede">Bike Bus Chico brings kids and families together to ride to school as a group, building community, confidence, and better mornings on two wheels.</p>
+  </div></section>
+  <section class="section section-white"><div class="wrap about-layout">
+    <div>
+      <h2>A school bus.<br />Powered by us.</h2>
+      <p>The idea is simple: the morning trip to school can be more than a car line. It can be exercise, independence, friendship, music, fresh air, and a chance to experience Chico at bike speed.</p>
+      <p>Like a school bus, we have a route, stops, and a schedule. Families can meet at the beginning or join along the way.</p>
+      <p>Our rides are organized by local parents and volunteers. As more families and schools become interested, Bike Bus Chico helps new neighborhood routes get rolling.</p>
+      <p>Bike Bus Chico is a community group ride, not child care or school transportation. Families are responsible for appropriate supervision.</p>
+      <a class="text-link" href="/ride/">How riding with us works <span aria-hidden="true">&#8599;</span></a>
     </div>
-  </section>
-
-  <section class="section section--tight">
-    <div class="container container--narrow">
-      <h2 class="center-text">What we care about</h2>
-      <div class="values">
-        {
-          values.map((value) => (
-            <article class="value">
-              <h3 class="value__title">{value.title}</h3>
-              <p class="value__text">{value.text}</p>
-            </article>
-          ))
-        }
-      </div>
-    </div>
-  </section>
-
+    <img src="/photos/hero.jpg" alt="Bike Bus Chico families riding together in Chico" loading="lazy" />
+  </div></section>
+  <section class="section"><div class="wrap">
+    <div class="section-head"><h2>What we care about.</h2></div>
+    <div class="values">{values.map((value) => <article class="panel"><h3>{value.title}</h3><p>{value.text}</p></article>)}</div>
+    <p class="community-note">More families on bikes means fewer cars competing for space around school at drop-off. Building community, reducing traffic, and creating healthy habits — one ride at a time.</p>
+  </div></section>
   <CommunityCTA />
 </BaseLayout>
-
-<style>
-  .values {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-m);
-    margin-top: var(--space-m);
-  }
-  @media (min-width: 40rem) {
-    .values {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  .value {
-    background: var(--cream-50);
-    border-radius: var(--radius);
-    padding: var(--space-m);
-    border: 1px solid color-mix(in srgb, var(--blue-700) 10%, white);
-  }
-  .value__title {
-    margin: 0;
-    font-size: var(--step-2);
-    color: var(--orange-500);
-  }
-  .value__text {
-    margin: 0.35rem 0 0;
-    color: var(--ink);
-  }
-</style>

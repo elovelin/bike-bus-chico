@@ -57,33 +57,20 @@ npm run build
 This creates a `dist/` folder containing the finished website. That folder is what
 gets published to the internet (see **Publishing** below).
 
+Run `npm run check` before publishing to type-check the Astro components and route data.
+
 ---
 
 ## The things you'll actually want to edit
 
-### 1. Discord & Instagram links, email, and site text
+### 1. Email, navigation, and site text
 
 Open **`src/data/site.ts`**.
 
-Near the top you'll see:
-
-```ts
-discordUrl: '#',
-instagramUrl: '#',
-```
-
-Replace each `'#'` with your real link, keeping the quotes — for example:
-
-```ts
-discordUrl: 'https://discord.gg/your-invite-code',
-instagramUrl: 'https://instagram.com/bikebuschico',
-```
-
-> ⚠️ **Until you paste in the real Discord link, every "Join the Community" button
-> points to `#` and won't go anywhere.** This is the single most important edit to make.
-
-The same file also holds the site name, tagline, description, contact email, and the
-navigation menu. It's safe to edit any text inside quotes.
+This file holds the site name, canonical domain, description, contact email,
+navigation, and calls to action. Community Discord access is invite-only: families
+find a route and contact its ride leader. No public invite link is required.
+It's safe to edit any text inside quotes.
 
 ### 2. Routes (bike bus schedules)
 
@@ -109,7 +96,7 @@ folder using these exact names and they'll appear automatically:
 | `hero.jpg` | Big image at the top of the homepage |
 | `ride-01.jpg`, `ride-02.jpg`, `ride-03.jpg` | Photo strip further down the homepage |
 
-Until real photos are added, the site shows clean placeholders — nothing looks broken.
+These photos are part of the site. Keep referenced files available when replacing them.
 
 **Photo tips:** landscape (wide) orientation works best, aim for real kids-and-families
 moments over posed shots, and keep each file under ~500 KB so pages stay fast.
@@ -123,7 +110,23 @@ Drop these into the **`public/routes/`** folder and they'll appear on that route
 | `hancock-park-map.png` | An image of the route map |
 | `hancock-park-route.pdf` | A downloadable/printable route sheet |
 
-If they're missing, the page politely shows a placeholder instead — again, nothing breaks.
+Both routes have map images. No printable PDF is currently included; the download
+link appears only when the corresponding PDF is present. Maps show geography;
+the stop list generated from `src/data/routes.ts` is the schedule reference.
+
+### 5. Rider Bold brand assets
+
+The approved Path 3 identity lives in **`public/brand/path3/`**. Header and footer
+logos and the wide wheel-pattern banner are exact original kit SVGs. Do not
+recolor, distort, or redraw them. The homepage callout uses the wide banner as a
+cover/no-repeat background, with a compact navy text backdrop and a separate
+cream button; it does not use a repeating square tile or a circular badge.
+
+Lilita One headlines, Montserrat ExtraBold labels, and Inter body text are
+self-hosted under `public/brand/path3/fonts/`, alongside their OFL license notices.
+`social.png` uses the original logo proportionally on a 1200 x 630 warm-white
+canvas. The favicon uses the original blue round badge. Site colors and responsive
+layouts are defined in `src/styles/global.css`.
 
 ---
 
@@ -144,9 +147,13 @@ hosts sites like this for free.
 5. In Cloudflare, add your custom domain **bikebuschico.org** under the project's
    **Custom domains** tab and follow the prompts.
 
-After that first setup, **every time you save a change to GitHub, Cloudflare
-automatically rebuilds and republishes the site** within a minute or two. You never
-have to run the build yourself for publishing.
+The existing project is **bike-bus-chico**, connected to
+**elovelin/bike-bus-chico**. Its production branch is **main**. Push a feature
+branch, check its Cloudflare Pages build, and merge normally into `main` to
+publish. Do not change DNS or the Pages configuration for ordinary site updates.
+Verify the Cloudflare check and the actual custom domain after merging; a push
+alone is not proof of publication. Keep the previous production commit as a
+rollback reference and use a normal revert commit if a rollback is needed.
 
 ---
 
@@ -155,8 +162,7 @@ have to run the build yourself for publishing.
 You don't have to hand-edit these files if you'd rather describe what you want.
 Copilot can make the change for you. Some prompts that work well:
 
-- *"In `src/data/site.ts`, set the Discord link to https://discord.gg/abc123 and the
-  Instagram link to https://instagram.com/bikebuschico."*
+- *"In `src/data/site.ts`, update the contact email or navigation label."*
 - *"Add a new forming route to `src/data/routes.ts` for Chico Junior High that meets
   Thursdays, leaving at 7:45am and arriving 8:10am, with stops at Bidwell Park and
   1st & Flume."*
@@ -196,11 +202,12 @@ The two files marked ★ are the ones you'll edit most.
 |---|---|
 | Preview the site | `npm run dev`, open http://localhost:4321/ |
 | Build for publishing | `npm run build` |
-| Change Discord/Instagram links | Edit `src/data/site.ts` |
+| Type-check the site | `npm run check` |
+| Change email/navigation | Edit `src/data/site.ts` |
 | Add or edit a route | Edit `src/data/routes.ts` |
 | Add photos | Drop files in `public/photos/` |
 | Add the route map/PDF | Drop files in `public/routes/` |
-| Publish a change | Save it to GitHub — Cloudflare republishes automatically |
+| Publish a change | Merge into `main`, then verify Cloudflare and bikebuschico.org |
 
 ---
 

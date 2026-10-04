@@ -41,7 +41,6 @@ export const site = {
  * Order matters — this is the header nav, left to right.
  */
 export const nav: NavItem[] = [
-  { label: 'Home', href: '/' },
   { label: 'Find a Bike Bus', href: '/routes/' },
   { label: 'Ride With Us', href: '/ride/' },
   { label: 'Start a Bike Bus', href: '/start-a-route/' },
@@ -49,12 +48,11 @@ export const nav: NavItem[] = [
 ];
 
 /**
- * The header call-to-action. Getting involved is the single most important
- * next step, so it lives in the header. It points to the routes list: you join
+ * The header call-to-action points to the routes list: you join
  * a Bike Bus by finding your route and contacting its ride leader directly.
  */
 export const headerCta: CallToAction = {
-  label: 'Get Involved',
+  label: 'Find your ride',
   href: '/routes/',
 };
 
@@ -62,8 +60,8 @@ export const headerCta: CallToAction = {
  * The three primary actions, reused across the site via <CommunityCTA />.
  * Everything funnels toward one of these.
  * - find / join both lead to the routes list (join = find your route, then
- *   reach its ride leader). Email (hello@) is reserved for new schools that
- *   want help starting their own route — see the Start a Bike Bus page.
+ *   reach its ride leader). The public email also connects families to routes
+ *   without a listed leader contact and supports starting new routes.
  */
 export const primaryActions = {
   find: { label: 'Find a Bike Bus', href: '/routes/' } satisfies CallToAction,

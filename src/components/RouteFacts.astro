@@ -1,0 +1,10 @@
+---
+import type { Route } from '../data/routes';
+interface Props { route: Route }
+const { route } = Astro.props;
+---
+<dl class="route-facts">
+  <div><dt>Ride day</dt><dd>{route.day}</dd></div>
+  <div><dt>Roll out</dt><dd>{route.startTime}</dd></div>
+  <div><dt>Distance</dt><dd>{route.distance}</dd></div>
+</dl>

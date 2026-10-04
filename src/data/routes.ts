@@ -104,16 +104,16 @@ export const routes: Route[] = [
     name: 'West Chico → Chico Country Day School',
     school: 'Chico Country Day School',
     day: 'Fridays',
-    startTime: '8:00 AM',
+    startTime: '7:50 AM',
     arrivalTime: '8:15 AM',
     distance: '2.1 miles',
-    status: 'forming',
+    status: 'active',
     summary:
       'A short, flat roll from the west side. We gather at the Warner St. Orchard, cruise past CSU Chico, and arrive together at Chico Country Day School — a quick, friendly ride that\u2019s perfect for newer riders.',
     stops: [
       {
         name: 'Warner St. Orchard',
-        time: '8:00 AM',
+        time: '7:50 AM',
         note: 'Gather a few minutes early — this is where we roll out.',
       },
       {
