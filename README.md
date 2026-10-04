@@ -101,13 +101,15 @@ These photos are part of the site. Keep referenced files available when replacin
 **Photo tips:** landscape (wide) orientation works best, aim for real kids-and-families
 moments over posed shots, and keep each file under ~500 KB so pages stay fast.
 
-### 4. Route map & PDF (for the Hancock Park route)
+### 4. Route maps & optional PDF
 
-Drop these into the **`public/routes/`** folder and they'll appear on that route's page:
+Store route maps in **`public/routes/`** and set each route's `mapImage` in
+`src/data/routes.ts` to the current file:
 
 | File name | What it is |
 |---|---|
-| `hancock-park-map.png` | An image of the route map |
+| `hancock-park-map-3b93b79529e3.png` | Current Hancock Park route map |
+| `west-chico-map-6832c28e94a5.png` | Current two-branch West Chico route map |
 | `hancock-park-route.pdf` | A downloadable/printable route sheet |
 
 Both routes have map images. No printable PDF is currently included; the download
@@ -117,6 +119,12 @@ Keep map screenshots uncropped with their original aspect ratios and visible
 attribution. Each route page offers the full-size image and a PNG download for
 static/print use, plus a lazy-loaded shared Google My Maps embed configured by
 `routeMapEmbedUrl` in `src/data/site.ts`.
+
+When replacing a map, use a new filename containing the first 12 lowercase
+characters of its SHA-256 hash, then update `mapImage`, `mapWidth`, and `mapHeight`.
+Images can remain cached in browsers for four hours, so overwriting an existing
+filename can leave families seeing old artwork. Full-size and download links
+automatically use `mapImage`; old files may remain for older direct links.
 
 West Chico has two neighborhood branches. Its confirmed Warner St. Orchard
 departure is 7:50 AM, both branches meet at the flashing sign at 8:00 AM, and
@@ -191,7 +199,7 @@ Always **preview with `npm run dev`** after a change to make sure it looks right
 website/
 ├─ public/            ← Photos, maps, and files that get served as-is
 │  ├─ photos/         ← hero.jpg, ride-01.jpg … (add real photos here)
-│  └─ routes/         ← hancock-park-map.png, hancock-park-route.pdf
+│  └─ routes/         ← Hash-versioned map images, optional route PDFs
 ├─ src/
 │  ├─ data/
 │  │  ├─ site.ts      ← ★ Site name, links, menu, calls-to-action
