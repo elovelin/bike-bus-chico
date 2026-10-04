@@ -127,9 +127,11 @@ p{margin:0 0 18px}
 .stop p{font-size:12px;margin:5px 0 0}
 .stop-time{font-size:12px;text-align:right}
 .map-link{display:block;margin-top:25px}
-.map-link img{width:100%;max-height:560px;object-fit:contain;border:1px solid var(--sidewalk);border-radius:10px;background:white}
+.map-link img{width:100%;height:auto;border:1px solid var(--sidewalk);border-radius:10px;background:white}
 .map-link>span{display:block;text-decoration:underline;font-size:12px;margin-top:8px}
 .map-download{margin-top:20px}
+.static-map,.live-map{margin-top:32px}
+.live-map iframe{display:block;width:100%;height:420px;border:0;border-radius:10px}
 .detail-side{display:flex;flex-direction:column;gap:22px}
 .detail-side .route-facts{margin-bottom:0}
 .detail-side .lede{font-size:15px}
@@ -175,8 +177,10 @@ details p{padding:0 24px 22px;font-size:14px;margin:0}
  .footer-top{grid-template-columns:1fr 1fr;gap:28px}.footer-top>div:first-child{grid-column:1/-1}.site-footer{padding-top:35px}.footer-top>div>a:not(:first-child){font-size:11px;overflow-wrap:anywhere}.footer-bottom{font-size:9px;gap:15px}
  .page-heading{padding:40px 0 30px}.page-heading h1{font-size:53px}.page-heading .lede{font-size:16px}.page-heading .eyebrow{font-size:10px}
  .detail-layout{grid-template-columns:1fr;gap:22px}.detail-side{order:-1}.panel{padding:22px}.stop{grid-template-columns:24px 1fr 69px;gap:9px}.stop strong{font-size:11px}.stop-time{font-size:11px}.stop p{font-size:11px}.panel h2{font-size:30px}
+ .live-map iframe{height:360px}
  .guide-list,.values{grid-template-columns:1fr}.support{columns:1}.about-layout{grid-template-columns:1fr;gap:30px}.about-layout>img{height:330px}
 }
 @media(max-width:380px){.hero h1{font-size:61px}.hero-actions{gap:18px}.hero-actions .button{font-size:12px;padding:13px 18px;gap:14px}.hero-actions .text-link{font-size:11px}.card-top{gap:8px}.status{font-size:8px;padding:5px 7px}.brand{width:175px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
 @media print{.menu-toggle,.nav{display:none}.section,.hero{padding:28px 0}.wrap{width:92%}.site-footer{background:white;color:var(--navy)}.footer-top{display:none}.footer-bottom,.footer-disclaimer{color:var(--navy)}.hero-photo>img{height:350px}.route-card,.guide-list li,.panel{break-inside:avoid}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{.live-map iframe{display:none}}

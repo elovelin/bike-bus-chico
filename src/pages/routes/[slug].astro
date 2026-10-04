@@ -25,6 +25,7 @@ const contact = route.leaderEmail ?? site.contactEmail;
   <section class="section"><div class="wrap detail-layout">
     <div class="panel">
       <h2>Your stops.</h2>
+      {route.scheduleNote && <p>{route.scheduleNote}</p>}
       <ol class="stop-list" role="list">
         {route.stops.map((stop, index) => (
           <li class="stop"><span class="stop-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><strong>{stop.name}</strong>{stop.note && <p>{stop.note}</p>}</div><span class="stop-time">{stop.time}</span></li>
@@ -32,12 +33,22 @@ const contact = route.leaderEmail ?? site.contactEmail;
       </ol>
       <p class="notice">Please arrive a few minutes early. The Bike Bus won't leave a listed stop before its scheduled time.</p>
       {route.mapImage && (
-        <a class="map-link" href={route.mapImage} target="_blank" rel="noopener noreferrer">
-          <img src={route.mapImage} alt={`Map of the ${route.name} Bike Bus route`} loading="lazy" />
-          <span>Open the route map in full size <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></span>
-        </a>
+        <section class="static-map" aria-labelledby="route-map-heading">
+          <h2 id="route-map-heading">Your route map.</h2>
+          <a class="map-link" href={route.mapImage} target="_blank" rel="noopener noreferrer">
+            <img src={route.mapImage} alt={route.mapAlt ?? `Map of the ${route.name} Bike Bus route`} width={route.mapWidth} height={route.mapHeight} loading="lazy" />
+            <span>Open the route map in full size <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></span>
+          </a>
+          <a class="text-link map-download" href={route.mapImage} download>Download route map (PNG)</a>
+        </section>
       )}
       {hasPdf && <a class="text-link map-download" href={route.routePdf}>Download printable route (PDF)</a>}
+      <section class="live-map" aria-labelledby="live-map-heading">
+        <h2 id="live-map-heading">Explore the live map.</h2>
+        <p>This shared Bike Bus Chico map contains neighborhood route layers. Use the stop list above for current ride times; the image above is available to download or print.</p>
+        <iframe src={site.routeMapEmbedUrl} title="Interactive Bike Bus Chico map with neighborhood route layers" width="640" height="420" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <a class="text-link map-download" href={site.routeMapEmbedUrl} target="_blank" rel="noopener noreferrer">Open the live Bike Bus Chico map <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a>
+      </section>
     </div>
     <aside class="detail-side" aria-label="Ride details">
       <div class="panel"><RouteStatus status={route.status} /><RouteFacts route={route} /><p class="arrival">Arrival at {route.school}: {route.arrivalTime}</p></div>

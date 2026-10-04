@@ -113,6 +113,16 @@ Drop these into the **`public/routes/`** folder and they'll appear on that route
 Both routes have map images. No printable PDF is currently included; the download
 link appears only when the corresponding PDF is present. Maps show geography;
 the stop list generated from `src/data/routes.ts` is the schedule reference.
+Keep map screenshots uncropped with their original aspect ratios and visible
+attribution. Each route page offers the full-size image and a PNG download for
+static/print use, plus a lazy-loaded shared Google My Maps embed configured by
+`routeMapEmbedUrl` in `src/data/site.ts`.
+
+West Chico has two neighborhood branches. Its confirmed Warner St. Orchard
+departure is 7:50 AM, both branches meet at the flashing sign at 8:00 AM, and
+arrive at school by 8:15 AM. The other branch's starting point and departure
+time are not published until confirmed. `startLabel` and `scheduleNote` make
+this distinction explicit; do not apply the Warner departure to both branches.
 
 ### 5. Rider Bold brand assets
 
@@ -125,7 +135,9 @@ cream button; it does not use a repeating square tile or a circular badge.
 Lilita One headlines, Montserrat ExtraBold labels, and Inter body text are
 self-hosted under `public/brand/path3/fonts/`, alongside their OFL license notices.
 `social.png` uses the original logo proportionally on a 1200 x 630 warm-white
-canvas. The favicon uses the original blue round badge. Site colors and responsive
+canvas. The favicon uses the original standalone color rider SVG at the versioned
+`/brand/path3/rider-favicon-v2.svg` URL; the old badge asset is retained but no longer
+linked. Site colors and responsive
 layouts are defined in `src/styles/global.css`.
 
 ---

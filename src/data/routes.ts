@@ -32,6 +32,8 @@ export interface Route {
   day: string;
   /** Departure time from the first stop. */
   startTime: string;
+  /** Optional label to identify which branch has a confirmed departure time. */
+  startLabel?: string;
   /** Approximate arrival time at school. */
   arrivalTime: string;
   /** Approximate distance, e.g. "~4.5 miles". */
@@ -43,10 +45,15 @@ export interface Route {
   leaderEmail?: string;
   /** One or two friendly sentences for cards and the route header. */
   summary: string;
+  /** Optional guidance about which stops or branches have confirmed schedules. */
+  scheduleNote?: string;
   /** Ordered list of stops, first to last. */
   stops: RouteStop[];
   /** Optional: path to a route map image in /public/routes/. */
   mapImage?: string;
+  mapAlt?: string;
+  mapWidth?: number;
+  mapHeight?: number;
   /** Optional: path to a printable route PDF in /public/routes/. */
   routePdf?: string;
 }
@@ -97,6 +104,9 @@ export const routes: Route[] = [
       },
     ],
     mapImage: '/routes/hancock-park-map.png',
+    mapAlt: 'Hancock Park route through Bidwell Park to Chico Country Day School, with stop markers A through E.',
+    mapWidth: 717,
+    mapHeight: 1180,
     routePdf: '/routes/hancock-park-route.pdf',
   },
   {
@@ -105,28 +115,35 @@ export const routes: Route[] = [
     school: 'Chico Country Day School',
     day: 'Fridays',
     startTime: '7:50 AM',
-    arrivalTime: '8:15 AM',
+    startLabel: 'Warner rollout',
+    arrivalTime: 'By 8:15 AM',
     distance: '2.1 miles',
     status: 'active',
     summary:
-      'A short, flat roll from the west side. We gather at the Warner St. Orchard, cruise past CSU Chico, and arrive together at Chico Country Day School — a quick, friendly ride that\u2019s perfect for newer riders.',
+      'Two neighborhood branches ride from West Chico and meet at the flashing stop sign on Warner at CSU Chico at 8:00 AM, then ride together to Chico Country Day School by 8:15 AM. The Warner St. Orchard branch rolls out at 7:50 AM.',
+    scheduleNote:
+      "The starting stop below is for the Warner St. Orchard branch. Contact the crew for the other branch's starting point and departure time.",
     stops: [
       {
         name: 'Warner St. Orchard',
         time: '7:50 AM',
-        note: 'Gather a few minutes early — this is where we roll out.',
+        note: 'Warner St. Orchard branch: gather a few minutes early — this is where we roll out.',
       },
       {
         name: 'Flashing Stop Sign on Warner at CSU Chico',
-        time: '8:08 AM',
+        time: '8:00 AM',
+        note: 'Both neighborhood branches meet here and continue to school together.',
       },
       {
         name: 'Chico Country Day School',
-        time: '8:15 AM',
+        time: 'By 8:15 AM',
         note: 'Arrive together, with time to spare before the bell.',
       },
     ],
     mapImage: '/routes/west-chico-map.png',
+    mapAlt: 'Two West Chico neighborhood branches converge near CSU Chico at marker C and continue to Chico Country Day School at marker D.',
+    mapWidth: 1389,
+    mapHeight: 1220,
   },
 ];
 

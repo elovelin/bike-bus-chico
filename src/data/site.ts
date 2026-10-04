@@ -31,6 +31,7 @@ export const site = {
   description:
     'Bike Bus Chico brings kids and families together to ride to school as a group — building community, confidence, and better mornings on two wheels.',
   contactEmail: 'hello@bikebuschico.org',
+  routeMapEmbedUrl: 'https://www.google.com/maps/d/embed?mid=1I3-tAJaPoP14C3FNe2iG6h02vBLAAuE&ehbc=2E312F',
 
   /** City / area context (used in copy and SEO). */
   location: 'Chico, California',
