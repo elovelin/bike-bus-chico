@@ -7,6 +7,7 @@
       height="1080"
       poster="/media/bike-bus-promo-poster-v2.jpg"
       controls
+      controlslist="nodownload"
       muted
       playsinline
       loop
@@ -16,18 +17,20 @@
     >
       <source src="/media/bike-bus-promo-720p-v2.mp4" type="video/mp4" media="(max-width: 760px)" />
       <source src="/media/bike-bus-promo-1080p-v2.mp4" type="video/mp4" />
-      <p>Your browser cannot play this video. <a href="/media/bike-bus-promo-1080p-v2.mp4">Open the original-quality promo video</a>.</p>
+      <p>Your browser cannot play this video.</p>
     </video>
-    <div class="promo-bar">
-      <p class="promo-label">This is the Bike Bus.</p>
-      <div class="promo-controls" hidden>
-        <button type="button" data-play aria-controls="promo-video" aria-pressed="false">Play video</button>
-        <button type="button" data-sound aria-controls="promo-video" aria-pressed="false">Sound on</button>
-      </div>
-      <a class="promo-download" href="/media/bike-bus-promo-1080p-v2.mp4" download>Download original (18.5 MiB)</a>
-      <p class="promo-status" role="status" aria-live="polite"></p>
+    <div class="promo-controls" role="group" aria-label="Video controls" hidden>
+      <button type="button" data-play aria-label="Play video" title="Play video" aria-controls="promo-video" aria-pressed="false">
+        <svg class="icon-play" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="m8 5 11 7-11 7V5Z" fill="currentColor" /></svg>
+        <svg class="icon-pause" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M6 5h4v14H6zm8 0h4v14h-4z" fill="currentColor" /></svg>
+      </button>
+      <button type="button" data-sound aria-label="Sound on" title="Sound on" aria-controls="promo-video" aria-pressed="false">
+        <svg class="icon-muted" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="m11 5-5 4H3v6h3l5 4V5Z" fill="currentColor" /><path d="m16 9 5 6m0-6-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        <svg class="icon-audible" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="m11 5-5 4H3v6h3l5 4V5Z" fill="currentColor" /><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+      </button>
     </div>
   </div>
+  <p class="promo-status" role="status" aria-live="polite"></p>
 </section>
 
 <script>
@@ -38,11 +41,11 @@
   }
 
   const video = document.querySelector<HTMLVideoElement>('#promo-video');
-  const bar = document.querySelector<HTMLElement>('.promo-bar');
-  const controls = bar?.querySelector<HTMLElement>('.promo-controls');
-  const playButton = bar?.querySelector<HTMLButtonElement>('[data-play]');
-  const soundButton = bar?.querySelector<HTMLButtonElement>('[data-sound]');
-  const status = bar?.querySelector<HTMLElement>('.promo-status');
+  const promo = document.querySelector<HTMLElement>('.promo-band');
+  const controls = promo?.querySelector<HTMLElement>('.promo-controls');
+  const playButton = promo?.querySelector<HTMLButtonElement>('[data-play]');
+  const soundButton = promo?.querySelector<HTMLButtonElement>('[data-sound]');
+  const status = promo?.querySelector<HTMLElement>('.promo-status');
 
   if (video && controls && playButton && soundButton && status && 'IntersectionObserver' in window) {
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -64,16 +67,20 @@
     const restricted = () => motion.matches || dataRestricted();
 
     const syncControls = () => {
-      playButton.textContent = video.paused ? 'Play video' : 'Pause video';
+      const playLabel = video.paused ? 'Play video' : 'Pause video';
+      playButton.setAttribute('aria-label', playLabel);
+      playButton.title = playLabel;
       playButton.setAttribute('aria-pressed', String(!video.paused));
       const audible = !video.muted && video.volume > 0;
-      soundButton.textContent = audible ? 'Sound off' : 'Sound on';
+      const soundLabel = audible ? 'Sound off' : 'Sound on';
+      soundButton.setAttribute('aria-label', soundLabel);
+      soundButton.title = soundLabel;
       soundButton.setAttribute('aria-pressed', String(audible));
     };
 
     const reportFailure = (error: unknown) => {
       failed = true;
-      status.textContent = 'The video could not load. Try Play again or use the download link.';
+      status.textContent = 'The video could not load. Press Play to try again.';
       console.error('Bike Bus promo video failed to load or play:', error);
       syncControls();
     };
@@ -132,7 +139,7 @@
       }
     };
 
-    playButton.addEventListener('click', () => {
+    const togglePlayback = () => {
       if (!video.paused || pending) {
         intent = 'pause';
         manualPermission = false;
@@ -144,9 +151,15 @@
         status.textContent = '';
         void start();
       }
+    };
+    playButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      togglePlayback();
     }, options);
+    video.addEventListener('click', togglePlayback, options);
 
-    soundButton.addEventListener('click', () => {
+    soundButton.addEventListener('click', (event) => {
+      event.stopPropagation();
       video.muted = !video.muted;
       if (!video.muted && video.volume === 0) video.volume = 1;
       syncControls();
@@ -185,6 +198,7 @@
     observer.observe(video);
     controls.hidden = false;
     video.controls = false;
+    video.classList.add('enhanced');
     // Keep the native baseline on browsers without enhancement; dispose for Astro navigation.
     document.addEventListener('astro:before-swap', () => {
       pause();
@@ -195,21 +209,18 @@
 </script>
 
 <style>
-  .promo-band { min-width: 0; background: var(--navy); color: var(--cream); border-radius: 0 0 14px 14px; overflow: hidden; }
-  .promo-inner { width: 100%; }
+  .promo-band { min-width: 0; }
+  .promo-inner { position: relative; width: 100%; }
   video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: var(--navy); }
-  .promo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 20px; }
-  .promo-label { flex-basis: 100%; font-family: var(--label); font-size: 12px; margin: 0; }
-  .promo-controls { display: flex; flex-wrap: wrap; gap: 12px; }
+  video.enhanced { cursor: pointer; }
+  .promo-controls { position: absolute; right: 6px; bottom: 6px; display: flex; gap: 8px; padding: 4px; border-radius: 10px; background: rgba(18, 48, 110, .88); }
   .promo-controls[hidden] { display: none; }
-  button { cursor: pointer; border: 2px solid var(--cream); border-radius: 7px; background: var(--cream); color: var(--navy); min-height: 44px; padding: 8px 16px; font-family: var(--label); font-size: 12px; }
-  button:hover { background: var(--sidewalk); }
-  button:focus-visible, a:focus-visible { outline-color: var(--orange); }
-  .promo-download { font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
-  .promo-status { flex-basis: 100%; font-size: 12px; margin: 0; }
+  button { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 8px; border: 0; border-radius: 6px; background: transparent; color: var(--cream); }
+  button:hover { background: rgba(247, 242, 233, .15); }
+  button:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+  .icon-pause, .icon-audible { display: none; }
+  [data-play][aria-pressed="true"] .icon-play, [data-sound][aria-pressed="true"] .icon-muted { display: none; }
+  [data-play][aria-pressed="true"] .icon-pause, [data-sound][aria-pressed="true"] .icon-audible { display: block; }
+  .promo-status { font-size: 12px; margin: 10px 0 0; }
   .promo-status:empty { display: none; }
-  @media (max-width: 760px) {
-    .promo-bar { padding: 18px 20px; gap: 14px; }
-    .promo-label { flex-basis: 100%; }
-  }
 </style>

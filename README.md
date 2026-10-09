@@ -131,7 +131,13 @@ Do not overwrite these URLs when replacing media: create new versioned filenames
 and update the component.
 
 The native baseline has controls, a poster, and `preload="none"`, with no autoplay.
-JavaScript enables separate Play/Pause and Sound controls below the footage.
+JavaScript enables two always-visible icon controls at the video's lower-right
+corner: Play/Pause and Sound on/off. Their high-contrast translucent navy backing,
+44 x 44 pixel touch targets, visible focus, accessible labels, titles, and
+event-driven states remain usable by touch and keyboard. Clicking/tapping the
+video itself also toggles playback; the separate buttons never double-toggle it.
+There is no under-video toolbar or extra caption. Autoplay rejection and genuine
+load failures provide visible status text and a working Play/retry control.
 Muted autoplay only runs while the video is visible and the page is active.
 Reduced motion, Save-Data, and supported slow-connection signals disable autoplay;
 visitors can explicitly press Play. Explicit pauses are never undone by scrolling
@@ -139,9 +145,11 @@ or returning to the tab, and sound is only enabled by a visitor's gesture.
 Active playback rechecks resolution when crossing the mobile/desktop breakpoint,
 preserving playback position and sound preference. A paused or offscreen video
 does not fetch another rendition on resize; it selects the appropriate one on
-the next permitted playback. The download link explicitly identifies the original
-quality file and its 18.5 MiB size, rather than implying the size of current playback.
-Browsers without enhancement retain native controls and the download link.
+the next permitted playback. No download link is promoted, including in fallback
+markup. Browsers without enhancement retain native playback controls; supported
+browsers suppress their download item via `controlslist="nodownload"`. This only
+removes download UI, not the ability to save publicly playable media. No source
+files are removed or reduced in quality as part of the control simplification.
 
 No unverified captions or audio description are supplied. Before production
 publication, review the actual soundtrack for speech and provide verified captions

@@ -42,13 +42,19 @@ def run(url, artifacts):
 
         def playing(page):
             page.wait_for_function("document.querySelector('video').currentTime > 0 && !document.querySelector('video').paused")
-            expect(page.locator("[data-play]")).to_have_text("Pause video")
+            expect(page.locator("[data-play]")).to_have_attribute("aria-label", "Pause video")
+            expect(page.locator("[data-play]")).to_have_attribute("title", "Pause video")
             expect(page.locator("[data-play]")).to_have_attribute("aria-pressed", "true")
+            expect(page.locator(".icon-pause")).to_be_visible()
+            expect(page.locator(".icon-play")).to_be_hidden()
 
         def paused(page):
             page.wait_for_function("document.querySelector('video').paused")
-            expect(page.locator("[data-play]")).to_have_text("Play video")
+            expect(page.locator("[data-play]")).to_have_attribute("aria-label", "Play video")
+            expect(page.locator("[data-play]")).to_have_attribute("title", "Play video")
             expect(page.locator("[data-play]")).to_have_attribute("aria-pressed", "false")
+            expect(page.locator(".icon-play")).to_be_visible()
+            expect(page.locator(".icon-pause")).to_be_hidden()
 
         def done(page, name):
             assert not page.errors, page.errors
@@ -80,6 +86,21 @@ def run(url, artifacts):
             assert page.locator(".hero .button").get_attribute("href") == "/routes/"
             assert page.locator(".hero .promo-band").count() == 1
             assert page.locator(".promo-band").count() == 1
+            assert page.locator(".promo-band a").count() == 0
+            assert page.locator(".promo-band [download]").count() == 0
+            assert page.locator(".promo-bar, .promo-label, .promo-download").count() == 0
+            assert page.locator("video a").count() == 0
+            expect(page.locator("video")).to_have_attribute("controlslist", "nodownload")
+            bounds = page.locator("video").bounding_box()
+            overlay = page.locator(".promo-controls").bounding_box()
+            assert overlay["y"] >= bounds["y"] + bounds["height"] * 0.62, (overlay, bounds)
+            assert overlay["x"] + overlay["width"] <= bounds["x"] + bounds["width"], (overlay, bounds)
+            assert overlay["y"] + overlay["height"] <= bounds["y"] + bounds["height"], (overlay, bounds)
+            assert abs(page.locator(".promo-band").bounding_box()["height"] - bounds["height"]) < 1
+            for control in page.locator(".promo-controls button").all():
+                target = control.bounding_box()
+                assert target["width"] >= 44 and target["height"] >= 44, target
+                assert control.get_attribute("aria-label") == control.get_attribute("title")
             assert page.locator(".photo-carousel").count() == 1
             assert page.locator(".photo-grid").count() == 0
             assert page.locator(".hero + .ride-gallery + .intro-band").count() == 1
@@ -94,9 +115,13 @@ def run(url, artifacts):
                 page.locator("video").scroll_into_view_if_needed()
                 page.locator("video").evaluate("v => { v.currentTime = 3; }")
                 page.wait_for_function("!document.querySelector('video').seeking && document.querySelector('video').readyState >= 2")
-                page.screenshot(path=str(artifacts / f"homepage-media-v2-{width}.png"), full_page=True)
-                page.locator(".hero").screenshot(path=str(artifacts / f"hero-media-v2-{width}.png"))
-                page.locator(".ride-gallery").screenshot(path=str(artifacts / f"gallery-media-v2-{width}.png"))
+                page.screenshot(path=str(artifacts / f"homepage-overlay-v3-{width}.png"), full_page=True)
+                page.locator(".hero").screenshot(path=str(artifacts / f"hero-overlay-v3-{width}.png"))
+            if width in [320, 390, 1440]:
+                page.locator("video").scroll_into_view_if_needed()
+                page.locator("video").evaluate("v => { v.currentTime = 5; }")
+                page.wait_for_function("!document.querySelector('video').seeking && document.querySelector('video').readyState >= 2")
+                page.locator(".promo-inner").screenshot(path=str(artifacts / f"video-overlay-school-v3-{width}.png"))
             done(page, f"Layout and actual muted playback at {width}px")
 
         page = page_for(viewport={"width": 1440, "height": 160})
@@ -108,8 +133,11 @@ def run(url, artifacts):
         page.locator("video").scroll_into_view_if_needed()
         playing(page)
         page.locator("[data-sound]").click()
-        expect(page.locator("[data-sound]")).to_have_text("Sound off")
+        expect(page.locator("[data-sound]")).to_have_attribute("aria-label", "Sound off")
+        expect(page.locator("[data-sound]")).to_have_attribute("title", "Sound off")
         expect(page.locator("[data-sound]")).to_have_attribute("aria-pressed", "true")
+        expect(page.locator(".icon-audible")).to_be_visible()
+        expect(page.locator(".icon-muted")).to_be_hidden()
         assert not page.locator("video").evaluate("v => v.muted")
         page.locator("[data-play]").focus()
         page.keyboard.press("Space")
@@ -143,10 +171,77 @@ def run(url, artifacts):
         page.emulate_media(reduced_motion="no-preference")
         paused(page)
         page.locator("[data-sound]").click()
-        expect(page.locator("[data-sound]")).to_have_text("Sound on")
+        expect(page.locator("[data-sound]")).to_have_attribute("aria-label", "Sound on")
+        expect(page.locator("[data-sound]")).to_have_attribute("title", "Sound on")
         expect(page.locator("[data-sound]")).to_have_attribute("aria-pressed", "false")
+        expect(page.locator(".icon-muted")).to_be_visible()
+        expect(page.locator(".icon-audible")).to_be_hidden()
         assert page.locator("video").evaluate("v => v.muted")
         done(page, "Keyboard controls, sound persistence, loop, offscreen/hidden lifecycle, explicit pause")
+
+        page = page_for(viewport={"width": 1440, "height": 900})
+        open_video(page)
+        playing(page)
+        page.locator("video").evaluate("""v => {
+            window.gestureCounts = {play: 0, pause: 0};
+            for (const event of ['play', 'pause']) v.addEventListener(event, () => window.gestureCounts[event]++);
+        }""")
+        page.locator("[data-sound]").click()
+        playing(page)
+        assert not page.locator("video").evaluate("v => v.muted")
+        assert page.evaluate("gestureCounts") == {"play": 0, "pause": 0}
+        page.locator("[data-play]").click()
+        paused(page)
+        page.wait_for_timeout(100)
+        assert page.evaluate("gestureCounts") == {"play": 0, "pause": 1}
+        video = page.locator("video")
+        bounds = video.bounding_box()
+        video.click(position={"x": bounds["width"] * 0.25, "y": bounds["height"] * 0.25})
+        playing(page)
+        assert page.evaluate("gestureCounts") == {"play": 1, "pause": 1}
+        video.click(position={"x": bounds["width"] * 0.25, "y": bounds["height"] * 0.25})
+        paused(page)
+        page.wait_for_timeout(100)
+        assert page.evaluate("gestureCounts") == {"play": 1, "pause": 2}
+        page.locator("[data-play]").focus()
+        page.keyboard.press("Space")
+        playing(page)
+        assert page.evaluate("gestureCounts") == {"play": 2, "pause": 2}
+        expect(page.locator("[data-play]")).to_be_focused()
+        assert page.locator("[data-play]").evaluate("e => e.matches(':focus-visible') && getComputedStyle(e).outlineStyle !== 'none'")
+        video.evaluate("v => { v.currentTime = 3; }")
+        page.wait_for_function("!document.querySelector('video').seeking && document.querySelector('video').readyState >= 2")
+        page.locator(".promo-inner").screenshot(path=str(artifacts / "overlay-focus-playing-v3-1440.png"))
+        page.locator("[data-sound]").focus()
+        page.keyboard.press("Space")
+        playing(page)
+        assert page.locator("video").evaluate("v => v.muted")
+        assert page.evaluate("gestureCounts") == {"play": 2, "pause": 2}
+        page.keyboard.press("Tab")
+        assert page.evaluate("!document.activeElement.closest('.promo-controls')"), "Overlay trapped keyboard focus"
+        done(page, "Video clicks toggle exactly once, sound never toggles playback, focused icon keys and Tab exit work")
+
+        page = page_for(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, reduced_motion="reduce")
+        open_video(page)
+        paused(page)
+        assert not page.media_requests
+        video = page.locator("video")
+        bounds = video.bounding_box()
+        video.tap(position={"x": bounds["width"] * 0.25, "y": bounds["height"] * 0.25})
+        playing(page)
+        assert video.evaluate("v => v.muted")
+        page.locator("[data-sound]").tap()
+        playing(page)
+        assert not video.evaluate("v => v.muted")
+        video.evaluate("v => { v.currentTime = 3; }")
+        page.wait_for_function("!document.querySelector('video').seeking && document.querySelector('video').readyState >= 2")
+        page.locator(".promo-inner").screenshot(path=str(artifacts / "overlay-playing-sound-v3-390.png"))
+        page.locator("[data-play]").tap()
+        paused(page)
+        video.tap(position={"x": bounds["width"] * 0.25, "y": bounds["height"] * 0.25})
+        playing(page)
+        assert not video.evaluate("v => v.muted")
+        done(page, "Actual touch taps on video and both overlay icons preserve sound and do not double-toggle")
 
         page = page_for(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
         open_video(page)
@@ -273,7 +368,7 @@ def run(url, artifacts):
                 page.locator(".carousel-slide").nth(6).scroll_into_view_if_needed()
                 expect(page.locator(".carousel-status")).to_have_text("Photo 7 of 11")
                 page.evaluate("document.activeElement.blur()")
-                page.locator(".ride-gallery").screenshot(path=str(artifacts / "carousel-portrait-media-v2-390.png"))
+                page.locator(".ride-gallery").screenshot(path=str(artifacts / "carousel-portrait-overlay-v3-390.png"))
             done(page, f"Carousel controls, keyboard, ends/focus, no rotation and all 11 images at {width}px")
 
         page = page_for(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, reduced_motion="reduce")
@@ -310,6 +405,7 @@ def run(url, artifacts):
         expect(page.locator(".promo-status")).to_contain_text("Press Play")
         paused(page)
         assert page.locator("video").get_attribute("poster")
+        page.locator(".promo-band").screenshot(path=str(artifacts / "autoplay-rejected-overlay-v3.png"))
         page.locator("[data-play]").click()
         playing(page)
         done(page, "Rejected-autoplay poster and successful manual recovery, no unhandled rejection")
@@ -318,7 +414,9 @@ def run(url, artifacts):
         page.route("**/*.mp4", lambda route: route.fulfill(status=404, body="Missing test media"))
         open_video(page)
         expect(page.locator(".promo-status")).to_contain_text("could not load")
+        assert "download" not in page.locator(".promo-status").inner_text().lower()
         paused(page)
+        page.locator(".promo-band").screenshot(path=str(artifacts / "media-error-overlay-v3.png"))
         page.unroute("**/*.mp4")
         page.locator("[data-play]").click()
         playing(page)
@@ -331,7 +429,9 @@ def run(url, artifacts):
         assert not page.media_requests
         assert page.locator("video").evaluate("v => v.controls && v.muted && v.preload === 'none' && !v.autoplay")
         expect(page.locator(".promo-controls")).to_be_hidden()
-        assert page.locator(".promo-download").get_attribute("href").endswith("1080p-v2.mp4")
+        assert page.locator(".promo-band a").count() == 0
+        assert page.locator(".promo-band [download]").count() == 0
+        assert page.locator("video").evaluate("v => v.controlsList.contains('nodownload')")
         native_video = page.locator("video")
         native_video.hover()
         page.wait_for_timeout(500)
@@ -342,7 +442,7 @@ def run(url, artifacts):
             if native_video.evaluate("v => v.currentTime > 0 && !v.paused"):
                 break
         assert native_video.evaluate("v => v.currentTime > 0 && !v.paused"), "Native Play did not start playback"
-        page.screenshot(path=str(artifacts / "native-controls-media-v2.png"))
+        page.screenshot(path=str(artifacts / "native-controls-overlay-v3.png"))
         assert page.locator(".carousel-slide img").count() == 11
         expect(page.locator(".carousel-controls")).to_be_hidden()
         page.locator(".carousel-row").scroll_into_view_if_needed()
@@ -369,8 +469,8 @@ def run(url, artifacts):
         done(page, "West Chico schedule and existing mobile navigation preserved")
 
         browser.close()
-    (artifacts / "homepage-media-browser-results-v2.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
-    (artifacts / "homepage-playback-sources-v2.json").write_text(json.dumps(playback_records, indent=2), encoding="utf-8")
+    (artifacts / "homepage-overlay-browser-results-v3.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+    (artifacts / "homepage-overlay-playback-sources-v3.json").write_text(json.dumps(playback_records, indent=2), encoding="utf-8")
     print(json.dumps(results, indent=2))
     print(f"PASS: {len(results)} scenarios")
 
