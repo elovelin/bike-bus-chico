@@ -5,18 +5,18 @@
       aria-label="Bike Bus Chico promo: families riding together"
       width="1920"
       height="1080"
-      poster="/media/bike-bus-promo-poster-v1.jpg"
+      poster="/media/bike-bus-promo-poster-v2.jpg"
       controls
       muted
       playsinline
       loop
       preload="none"
-      data-small-src="/media/bike-bus-promo-720p-v1.mp4"
-      data-large-src="/media/bike-bus-promo-1080p-v1.mp4"
+      data-small-src="/media/bike-bus-promo-720p-v2.mp4"
+      data-large-src="/media/bike-bus-promo-1080p-v2.mp4"
     >
-      <source src="/media/bike-bus-promo-720p-v1.mp4" type="video/mp4" media="(max-width: 760px)" />
-      <source src="/media/bike-bus-promo-1080p-v1.mp4" type="video/mp4" />
-      <p>Your browser cannot play this video. <a href="/media/bike-bus-promo-720p-v1.mp4">Open the promo video</a>.</p>
+      <source src="/media/bike-bus-promo-720p-v2.mp4" type="video/mp4" media="(max-width: 760px)" />
+      <source src="/media/bike-bus-promo-1080p-v2.mp4" type="video/mp4" />
+      <p>Your browser cannot play this video. <a href="/media/bike-bus-promo-1080p-v2.mp4">Open the original-quality promo video</a>.</p>
     </video>
     <div class="promo-bar">
       <p class="promo-label">This is the Bike Bus.</p>
@@ -24,7 +24,7 @@
         <button type="button" data-play aria-controls="promo-video" aria-pressed="false">Play video</button>
         <button type="button" data-sound aria-controls="promo-video" aria-pressed="false">Sound on</button>
       </div>
-      <a class="promo-download" href="/media/bike-bus-promo-720p-v1.mp4" download>Download video (3.9 MiB)</a>
+      <a class="promo-download" href="/media/bike-bus-promo-1080p-v2.mp4" download>Download original (18.5 MiB)</a>
       <p class="promo-status" role="status" aria-live="polite"></p>
     </div>
   </div>
@@ -46,6 +46,7 @@
 
   if (video && controls && playButton && soundButton && status && 'IntersectionObserver' in window) {
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const narrow = window.matchMedia('(max-width: 760px)');
     const connection = (navigator as Navigator & { connection?: Connection }).connection;
     let intent: 'auto' | 'play' | 'pause' = 'auto';
     let manualPermission = false;
@@ -53,12 +54,14 @@
     let pending = false;
     let failed = false;
     let attempt = 0;
+    let resumeAt = 0;
     const cleanup = new AbortController();
     const options = { signal: cleanup.signal };
 
-    const restricted = () => motion.matches || connection?.saveData === true ||
+    const dataRestricted = () => connection?.saveData === true ||
       ['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '') ||
-      (connection?.downlink !== undefined && connection.downlink < 1.5);
+      (connection?.downlink !== undefined && connection.downlink > 0 && connection.downlink < 1);
+    const restricted = () => motion.matches || dataRestricted();
 
     const syncControls = () => {
       playButton.textContent = video.paused ? 'Play video' : 'Pause video';
@@ -83,14 +86,16 @@
     };
 
     const start = async () => {
-      if (pending || !video.paused) return;
-      if (!video.hasAttribute('src')) {
-        const small = window.matchMedia('(max-width: 760px)').matches || restricted();
-        const source = small ? video.dataset.smallSrc : video.dataset.largeSrc;
-        if (!source) {
-          reportFailure(new Error('Missing promo video source.'));
-          return;
-        }
+      if (pending) return;
+      const source = narrow.matches || dataRestricted() ? video.dataset.smallSrc : video.dataset.largeSrc;
+      if (!source) {
+        reportFailure(new Error('Missing promo video source.'));
+        return;
+      }
+      if (!video.paused && video.getAttribute('src') === source) return;
+      if (video.getAttribute('src') !== source) {
+        resumeAt = video.currentTime;
+        pause();
         video.querySelectorAll('source').forEach((element) => element.remove());
         video.src = source;
       }
@@ -150,6 +155,12 @@
     for (const event of ['play', 'pause', 'volumechange', 'ended']) {
       video.addEventListener(event, syncControls, options);
     }
+    video.addEventListener('loadedmetadata', () => {
+      if (resumeAt > 0) {
+        video.currentTime = Math.min(resumeAt, video.duration);
+        resumeAt = 0;
+      }
+    }, options);
     video.addEventListener('playing', () => { status.textContent = ''; }, options);
     video.addEventListener('error', () => reportFailure(video.error), options);
     const preferencesChanged = () => {
@@ -160,6 +171,7 @@
     };
     motion.addEventListener('change', preferencesChanged, options);
     connection?.addEventListener('change', preferencesChanged, options);
+    narrow.addEventListener('change', reconcile, options);
     document.addEventListener('visibilitychange', reconcile, options);
     window.addEventListener('pagehide', pause, options);
     window.addEventListener('pageshow', reconcile, options);
@@ -183,17 +195,17 @@
 </script>
 
 <style>
-  .promo-band { background: var(--navy); color: var(--cream); }
-  .promo-inner { max-width: 1440px; margin: auto; }
+  .promo-band { min-width: 0; background: var(--navy); color: var(--cream); border-radius: 0 0 14px 14px; overflow: hidden; }
+  .promo-inner { width: 100%; }
   video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: var(--navy); }
-  .promo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 20px 28px; }
-  .promo-label { font-family: var(--label); font-size: 14px; margin: 0 auto 0 0; }
+  .promo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 20px; }
+  .promo-label { flex-basis: 100%; font-family: var(--label); font-size: 12px; margin: 0; }
   .promo-controls { display: flex; flex-wrap: wrap; gap: 12px; }
   .promo-controls[hidden] { display: none; }
   button { cursor: pointer; border: 2px solid var(--cream); border-radius: 7px; background: var(--cream); color: var(--navy); min-height: 44px; padding: 8px 16px; font-family: var(--label); font-size: 12px; }
   button:hover { background: var(--sidewalk); }
   button:focus-visible, a:focus-visible { outline-color: var(--orange); }
-  .promo-download { font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+  .promo-download { font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
   .promo-status { flex-basis: 100%; font-size: 12px; margin: 0; }
   .promo-status:empty { display: none; }
   @media (max-width: 760px) {

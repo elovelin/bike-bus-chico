@@ -88,28 +88,47 @@ Statuses you can use:
 
 ### 3. Photos
 
-Real photos make this site come alive. Drop image files into the **`public/photos/`**
-folder using these exact names and they'll appear automatically:
+The homepage carousel uses all 11 supplied community photos. Oriented, sRGB,
+high-quality WebP derivatives live in **`public/photos/community/`**; the original
+JPEGs remain unchanged outside the repository. Derivatives preserve full images,
+have a maximum long edge of 1440 pixels, omit EXIF/XMP metadata, and use filenames
+containing the first 12 characters of their SHA-256 hash.
 
 | File name | Where it shows |
 |---|---|
-| `hero.jpg` | Big image at the top of the homepage |
-| `ride-01.jpg`, `ride-02.jpg`, `ride-03.jpg` | Photo strip further down the homepage |
+| `community/community-<hash>.webp` | Homepage carousel immediately below the hero |
+| `hero.jpg` | About page photo |
 
-These photos are part of the site. Keep referenced files available when replacing them.
+Update **`src/data/gallery.ts`** when adding/replacing carousel images: include the
+new content-specific URL, actual dimensions, and descriptive alt text grounded in
+the visible photo. Keep referenced files available when replacing them.
+The older `ride-*.jpg` files remain available for existing direct links, but are
+not duplicated in a second homepage gallery.
 
-**Photo tips:** landscape (wide) orientation works best, aim for real kids-and-families
-moments over posed shots, and keep each file under ~500 KB so pages stay fast.
+`PhotoCarousel.astro` shows uncropped landscape and portrait images in a
+scroll-snap row. Previous/Next buttons and Arrow/Home/End keys enhance native
+scrolling; touch swipe and the ordinary scrollable photos work without JavaScript.
+There is no automatic rotation. Reduced motion uses instant scrolling, controls
+retain focus at either end, and noninitial images use native lazy loading with
+explicit dimensions. The original gallery's community copy is retained here.
 
 ### Homepage promo video
 
-`src/components/PromoVideo.astro` adds the full-width, uncropped 16:9 promo after
-the homepage hero. Its versioned poster and two optimized MP4s live in
-`public/media/`; the original source video is not part of the repository.
-The encodes retain the entire promo and its audio (H264/AAC, 24 fps, yuv420p,
-fast-start MP4). Desktop uses 1080p, narrow screens use 720p, and manual playback
-under motion/data restrictions also chooses 720p. Do not overwrite these URLs
-when replacing media: create new versioned filenames and update the component.
+`src/components/PromoVideo.astro` places the uncropped 16:9 promo beside the
+homepage headline and CTA, replacing the former hero photo. Mobile stacks the
+headline/CTA, video, then carousel. Its versioned poster and two MP4s live in
+`public/media/`; the original source file remains unchanged outside the repository.
+Desktop uses an original-quality 1080p fast-start remux with copied H264 video
+and AAC audio streams: no lossy re-encoding, cadence change, or content trimming.
+Both renditions retain the complete promo and its original 32 fps cadence.
+Narrow screens and data-conscious playback use a smaller 720p rendition.
+Reduced motion disables autoplay, but does not lower resolution after explicit
+Play. Save-Data, slow effective connections, or a positive downlink estimate below
+1 Mbps disable autoplay and select 720p for manual playback. Missing/unknown
+connection information does not force desktop into lower quality. The poster is
+generated directly from the original at 1920 x 1080 with high JPEG quality.
+Do not overwrite these URLs when replacing media: create new versioned filenames
+and update the component.
 
 The native baseline has controls, a poster, and `preload="none"`, with no autoplay.
 JavaScript enables separate Play/Pause and Sound controls below the footage.
@@ -117,6 +136,11 @@ Muted autoplay only runs while the video is visible and the page is active.
 Reduced motion, Save-Data, and supported slow-connection signals disable autoplay;
 visitors can explicitly press Play. Explicit pauses are never undone by scrolling
 or returning to the tab, and sound is only enabled by a visitor's gesture.
+Active playback rechecks resolution when crossing the mobile/desktop breakpoint,
+preserving playback position and sound preference. A paused or offscreen video
+does not fetch another rendition on resize; it selects the appropriate one on
+the next permitted playback. The download link explicitly identifies the original
+quality file and its 18.5 MiB size, rather than implying the size of current playback.
 Browsers without enhancement retain native controls and the download link.
 
 No unverified captions or audio description are supplied. Before production
@@ -135,7 +159,9 @@ python tests\promo_video_browser.py --url http://127.0.0.1:8778 --artifacts "$en
 The checks cover responsive full-frame layout, real playback/control events,
 keyboard interaction, sound/loop state, reduced motion, simulated connection and
 page-visibility signals, autoplay rejection, media errors, and native no-JS playback.
-Screenshots and JSON results go to the selected artifact directory, not the site.
+The same suite verifies hero/gallery placement, all carousel images, controls,
+focus, native touch scrolling and JavaScript-disabled content. Screenshots and
+JSON results go to the selected artifact directory, not the site.
 
 ### 4. Route maps & optional PDF
 
@@ -234,11 +260,12 @@ Always **preview with `npm run dev`** after a change to make sure it looks right
 ```
 website/
 ├─ public/            ← Photos, maps, and files that get served as-is
-│  ├─ photos/         ← hero.jpg, ride-01.jpg … (add real photos here)
+│  ├─ photos/         ← Hash-versioned carousel derivatives and About photo
 │  └─ routes/         ← Hash-versioned map images, optional route PDFs
 ├─ src/
 │  ├─ data/
 │  │  ├─ site.ts      ← ★ Site name, links, menu, calls-to-action
+│  │  ├─ gallery.ts   ← Carousel image URLs, dimensions, and alt text
 │  │  └─ routes.ts    ← ★ All bike bus routes & schedules
 │  ├─ pages/          ← One file per page of the site
 │  ├─ components/     ← Reusable building blocks (header, footer, cards…)
@@ -261,7 +288,7 @@ The two files marked ★ are the ones you'll edit most.
 | Type-check the site | `npm run check` |
 | Change email/navigation | Edit `src/data/site.ts` |
 | Add or edit a route | Edit `src/data/routes.ts` |
-| Add photos | Drop files in `public/photos/` |
+| Add carousel photos | Generate versioned, metadata-free derivatives; update `src/data/gallery.ts` |
 | Add the route map/PDF | Drop files in `public/routes/` |
 | Publish a change | Merge into `main`, then verify Cloudflare and bikebuschico.org |
 

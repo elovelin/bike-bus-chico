@@ -3,13 +3,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CommunityCTA from '../components/CommunityCTA.astro';
 import RouteList from '../components/RouteList.astro';
 import RideSteps from '../components/RideSteps.astro';
-import PhotoGrid from '../components/PhotoGrid.astro';
+import PhotoCarousel from '../components/PhotoCarousel.astro';
 import PromoVideo from '../components/PromoVideo.astro';
-const galleryPhotos = [
-  { src: '/photos/ride-01.jpg', alt: 'Kids and parents riding together down a Chico street' },
-  { src: '/photos/ride-02.jpg', alt: 'Families taking part in a Bike Bus Chico ride' },
-  { src: '/photos/ride-03.jpg', alt: 'The Bike Bus crew riding together' },
-];
+import { galleryPhotos } from '../data/gallery';
 ---
 <BaseLayout path="/">
   <section class="hero">
@@ -24,13 +20,17 @@ const galleryPhotos = [
         </div>
         <p class="hero-note">Join at the start. Hop on along the way.<br />No registration required.</p>
       </div>
-      <div class="hero-photo">
-        <img src="/photos/hero.jpg" alt="Kids and adults riding bikes together through Chico" width="1500" height="2000" fetchpriority="high" />
-        <div class="hero-caption"><strong>Our Hancock Park crew</strong><span>Fridays &middot; Chico Country Day School</span></div>
-      </div>
+      <PromoVideo />
     </div>
   </section>
-  <PromoVideo />
+  <section class="section section-white ride-gallery" aria-labelledby="ride-gallery-title">
+    <div class="wrap">
+      <div class="section-head"><div><p class="eyebrow">From the ride</p><h2 id="ride-gallery-title">This is our morning.</h2></div><p>Friends to ride with. Neighbors to meet.<br />A little more fun on the way to school.</p></div>
+      <PhotoCarousel photos={galleryPhotos} />
+      <p class="photo-note">Photos from the Bike Bus Chico community.</p>
+      <p class="community-note">The ride is just the beginning. Families connect, route leaders share updates, and new riders ask questions. <a href="/routes/">Reach out to your ride leader</a> to join our community Discord, which is invite-only for now.</p>
+    </div>
+  </section>
   <section class="intro-band">
     <div class="wrap intro-grid">
       <div><p class="eyebrow">What is a Bike Bus?</p><h2>A school bus.<br />On bikes.</h2></div>
@@ -49,13 +49,12 @@ const galleryPhotos = [
       <RideSteps />
     </div>
   </section>
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head"><div><p class="eyebrow">From the ride</p><h2>This is our morning.</h2></div><p>Friends to ride with. Neighbors to meet.<br />A little more fun on the way to school.</p></div>
-      <PhotoGrid photos={galleryPhotos} />
-      <p class="photo-note">Photos from the Bike Bus Chico community.</p>
-      <p class="community-note">The ride is just the beginning. Families connect, route leaders share updates, and new riders ask questions. <a href="/routes/">Reach out to your ride leader</a> to join our community Discord, which is invite-only for now.</p>
-    </div>
-  </section>
   <CommunityCTA heading="No Bike Bus at your school?" text="You bring the families. We'll help you think through the route, stops, and first ride." label="Start a Bike Bus" href="/start-a-route/" wheelPattern />
 </BaseLayout>
+
+<style>
+  .ride-gallery { padding: 45px 0 52px; }
+  @media (max-width: 760px) {
+    .ride-gallery { padding: 30px 0 38px; }
+  }
+</style>

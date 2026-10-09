@@ -14,6 +14,7 @@ from playwright.sync_api import expect, sync_playwright
 
 def run(url, artifacts):
     results = []
+    playback_records = []
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(channel="msedge", headless=True)
 
@@ -21,9 +22,12 @@ def run(url, artifacts):
             signals = kwargs.pop("connection", {"saveData": False, "effectiveType": "4g", "downlink": 10})
             context = browser.new_context(**kwargs)
             page = context.new_page()
-            page.add_init_script("""window.testConnection = Object.assign(new EventTarget(), """ +
-                                 json.dumps(signals) + """);
-                Object.defineProperty(navigator, 'connection', {get: () => window.testConnection});""")
+            if signals is None:
+                page.add_init_script("Object.defineProperty(navigator, 'connection', {get: () => undefined});")
+            elif signals != "native":
+                page.add_init_script("""window.testConnection = Object.assign(new EventTarget(), """ +
+                                     json.dumps(signals) + """);
+                    Object.defineProperty(navigator, 'connection', {get: () => window.testConnection});""")
             page.errors = []
             page.media_requests = []
             page.on("pageerror", lambda error: page.errors.append(str(error)))
@@ -64,33 +68,43 @@ def run(url, artifacts):
                 fit: getComputedStyle(v).objectFit
             })""")
             assert abs(details["width"] / details["height"] - 16 / 9) < 0.02, details
-            assert details["width"] == min(width, 1440), details
+            assert details["width"] == page.locator(".hero .promo-band").evaluate("e => e.clientWidth"), details
+            assert details["width"] < width, details
             assert details["muted"] and details["loop"] and details["inline"], details
             assert not details["native"] and details["fit"] == "contain", details
             assert 30.68 < details["duration"] < 30.75, details
             assert details["naturalWidth"] == (1280 if width <= 760 else 1920), details
+            assert details["source"].endswith("720p-v2.mp4" if width <= 760 else "1080p-v2.mp4"), details
+            playback_records.append({"viewport": width, **details})
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), width
             assert page.locator(".hero .button").get_attribute("href") == "/routes/"
+            assert page.locator(".hero .promo-band").count() == 1
+            assert page.locator(".promo-band").count() == 1
+            assert page.locator(".photo-carousel").count() == 1
+            assert page.locator(".photo-grid").count() == 0
+            assert page.locator(".hero + .ride-gallery + .intro-band").count() == 1
             assert page.locator(".closing-pattern").count() == 1
             assert page.locator("link[rel=canonical]").get_attribute("href") == "https://bikebuschico.org/"
             assert page.locator('meta[name="robots"][content*="noindex"]').count() == 0
             page.locator("[data-play]").click()
             paused(page)
             if width in [390, 1440]:
-                page.locator(".photo-grid").scroll_into_view_if_needed()
-                page.wait_for_function("Array.from(document.querySelectorAll('.photo-grid img')).every(i => i.complete && i.naturalWidth > 0)")
+                page.locator(".photo-carousel").scroll_into_view_if_needed()
+                page.wait_for_function("Array.from(document.querySelectorAll('.carousel-slide img')).slice(0, 3).every(i => i.complete && i.naturalWidth > 0)")
                 page.locator("video").scroll_into_view_if_needed()
                 page.locator("video").evaluate("v => { v.currentTime = 3; }")
                 page.wait_for_function("!document.querySelector('video').seeking && document.querySelector('video').readyState >= 2")
-                page.screenshot(path=str(artifacts / f"homepage-promo-{width}.png"), full_page=True)
-                page.locator(".promo-band").screenshot(path=str(artifacts / f"video-band-{width}.png"))
+                page.screenshot(path=str(artifacts / f"homepage-media-v2-{width}.png"), full_page=True)
+                page.locator(".hero").screenshot(path=str(artifacts / f"hero-media-v2-{width}.png"))
+                page.locator(".ride-gallery").screenshot(path=str(artifacts / f"gallery-media-v2-{width}.png"))
             done(page, f"Layout and actual muted playback at {width}px")
 
-        page = page_for(viewport={"width": 1440, "height": 800})
+        page = page_for(viewport={"width": 1440, "height": 160})
         page.goto(url)
         page.locator(".promo-controls").wait_for(state="visible")
         page.wait_for_timeout(300)
         assert not page.media_requests, "Offscreen video should not download"
+        page.set_viewport_size({"width": 1440, "height": 900})
         page.locator("video").scroll_into_view_if_needed()
         playing(page)
         page.locator("[data-sound]").click()
@@ -141,7 +155,7 @@ def run(url, artifacts):
         paused(page)
         page.locator("[data-play]").click()
         playing(page)
-        assert "720p" in page.locator("video").evaluate("v => v.currentSrc")
+        assert "1080p-v2" in page.locator("video").evaluate("v => v.currentSrc")
         page.evaluate("""() => {
             window.motionChanges = 0;
             matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => window.motionChanges++);
@@ -170,6 +184,115 @@ def run(url, artifacts):
             page.evaluate("window.testConnection.dispatchEvent(new Event('change'))")
             paused(page)
             done(page, f"Consent-aware connection loading: {signals}")
+
+        for width in [1440, 1920]:
+            for signals in [None, {}, {"effectiveType": "4g", "downlink": 1.3},
+                            {"effectiveType": "unknown", "downlink": 0}]:
+                page = page_for(viewport={"width": width, "height": 900}, connection=signals)
+                open_video(page)
+                playing(page)
+                details = page.locator("video").evaluate("""v => ({
+                    source: v.currentSrc, naturalWidth: v.videoWidth, naturalHeight: v.videoHeight,
+                    renderedWidth: v.clientWidth, renderedHeight: v.clientHeight, time: v.currentTime
+                })""")
+                assert details["naturalWidth"] == 1920 and details["naturalHeight"] == 1080, details
+                assert details["source"].endswith("1080p-v2.mp4"), details
+                playback_records.append({"viewport": width, "connection": signals, **details})
+                done(page, f"Original desktop quality at {width}px with connection={signals}")
+
+        page = page_for(viewport={"width": 390, "height": 900}, reduced_motion="reduce")
+        open_video(page)
+        page.locator("[data-play]").click()
+        playing(page)
+        page.locator("video").evaluate("v => { v.currentTime = 5; }")
+        page.wait_for_function("!document.querySelector('video').seeking && document.querySelector('video').currentTime >= 5")
+        page.locator("[data-sound]").click()
+        page.set_viewport_size({"width": 1440, "height": 900})
+        page.locator("video").scroll_into_view_if_needed()
+        page.wait_for_function("document.querySelector('video').videoWidth === 1920 && document.querySelector('video').currentTime >= 5")
+        playing(page)
+        assert not page.locator("video").evaluate("v => v.muted")
+        assert page.locator("video").evaluate("v => v.currentTime < 8")
+        page.locator("[data-play]").click()
+        paused(page)
+        request_count = len(page.media_requests)
+        page.set_viewport_size({"width": 390, "height": 900})
+        page.wait_for_timeout(300)
+        paused(page)
+        assert page.locator("video").evaluate("v => v.currentSrc.endsWith('1080p-v2.mp4')")
+        assert not any("720p" in request for request in page.media_requests[request_count:])
+        page.locator("[data-play]").click()
+        page.wait_for_function("document.querySelector('video').videoWidth === 1280")
+        playing(page)
+        assert not page.locator("video").evaluate("v => v.muted")
+        done(page, "Resize upgrades active playback, preserves time/sound, never overrides explicit pause")
+
+        for width in [320, 390, 768, 1440]:
+            page = page_for(viewport={"width": width, "height": 900}, reduced_motion="reduce")
+            page.goto(url)
+            track = page.locator(".carousel-row")
+            track.scroll_into_view_if_needed()
+            previous = page.locator("[data-previous]")
+            next_button = page.locator("[data-next]")
+            expect(previous).to_have_attribute("aria-disabled", "true")
+            expect(next_button).to_have_attribute("aria-disabled", "false")
+            assert page.locator(".carousel-slide").count() == 11
+            assert page.locator('.carousel-slide img[loading="lazy"]').count() == 10
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            original_scroll = track.evaluate("e => e.scrollLeft")
+            page.wait_for_timeout(500)
+            assert track.evaluate("e => e.scrollLeft") == original_scroll, "Carousel rotated automatically"
+            next_button.click()
+            page.wait_for_function("document.querySelector('.carousel-row').scrollLeft > 0")
+            expect(previous).to_have_attribute("aria-disabled", "false")
+            expect(next_button).to_be_focused()
+            track.focus()
+            page.keyboard.press("End")
+            expect(next_button).to_have_attribute("aria-disabled", "true")
+            assert track.evaluate("e => Math.abs(e.scrollLeft - (e.scrollWidth - e.clientWidth)) < 2")
+            next_button.focus()
+            next_button.click(force=True)
+            expect(next_button).to_be_focused()
+            assert track.evaluate("e => Math.abs(e.scrollLeft - (e.scrollWidth - e.clientWidth)) < 2")
+            previous.click()
+            expect(next_button).to_have_attribute("aria-disabled", "false")
+            expect(previous).to_be_focused()
+            track.focus()
+            page.keyboard.press("Home")
+            expect(previous).to_have_attribute("aria-disabled", "true")
+            page.keyboard.press("ArrowRight")
+            expect(previous).to_have_attribute("aria-disabled", "false")
+            assert page.locator(".carousel-status").inner_text()
+            for image in page.locator(".carousel-slide img").all():
+                image.scroll_into_view_if_needed()
+                expect(image).to_have_js_property("complete", True)
+                assert image.evaluate("e => e.naturalWidth > 0 && e.naturalHeight > 0 && getComputedStyle(e).objectFit === 'contain'")
+                assert image.get_attribute("alt")
+                assert image.get_attribute("width") and image.get_attribute("height")
+            if width == 390:
+                page.locator(".carousel-slide").nth(6).scroll_into_view_if_needed()
+                expect(page.locator(".carousel-status")).to_have_text("Photo 7 of 11")
+                page.evaluate("document.activeElement.blur()")
+                page.locator(".ride-gallery").screenshot(path=str(artifacts / "carousel-portrait-media-v2-390.png"))
+            done(page, f"Carousel controls, keyboard, ends/focus, no rotation and all 11 images at {width}px")
+
+        page = page_for(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, reduced_motion="reduce")
+        page.goto(url)
+        track = page.locator(".carousel-row")
+        track.scroll_into_view_if_needed()
+        bounds = track.bounding_box()
+        session = page.context.new_cdp_session(page)
+        session.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 1})
+        x = bounds["x"] + bounds["width"] * 0.8
+        y = bounds["y"] + bounds["height"] / 2
+        session.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y}]})
+        for step in range(1, 16):
+            session.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": x - step * 15, "y": y}]})
+            page.wait_for_timeout(20)
+        session.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+        page.wait_for_function("document.querySelector('.carousel-row').scrollLeft > 0")
+        expect(page.locator("[data-previous]")).to_have_attribute("aria-disabled", "false")
+        done(page, "Actual touch scroll gesture advances the native scroll-snap carousel")
 
         page = page_for(viewport={"width": 1440, "height": 900})
         page.add_init_script("""(() => {
@@ -208,7 +331,7 @@ def run(url, artifacts):
         assert not page.media_requests
         assert page.locator("video").evaluate("v => v.controls && v.muted && v.preload === 'none' && !v.autoplay")
         expect(page.locator(".promo-controls")).to_be_hidden()
-        assert page.locator(".promo-download").get_attribute("href").endswith("720p-v1.mp4")
+        assert page.locator(".promo-download").get_attribute("href").endswith("1080p-v2.mp4")
         native_video = page.locator("video")
         native_video.hover()
         page.wait_for_timeout(500)
@@ -219,7 +342,14 @@ def run(url, artifacts):
             if native_video.evaluate("v => v.currentTime > 0 && !v.paused"):
                 break
         assert native_video.evaluate("v => v.currentTime > 0 && !v.paused"), "Native Play did not start playback"
-        page.screenshot(path=str(artifacts / "native-controls-review.png"))
+        page.screenshot(path=str(artifacts / "native-controls-media-v2.png"))
+        assert page.locator(".carousel-slide img").count() == 11
+        expect(page.locator(".carousel-controls")).to_be_hidden()
+        page.locator(".carousel-row").scroll_into_view_if_needed()
+        page.locator(".carousel-row").focus()
+        page.keyboard.press("ArrowRight")
+        page.wait_for_timeout(500)
+        assert page.locator(".carousel-row").evaluate("e => e.scrollLeft > 0")
         done(page, "JavaScript-disabled native Play control and no eager media download")
 
         page = page_for(viewport={"width": 390, "height": 844})
@@ -239,7 +369,8 @@ def run(url, artifacts):
         done(page, "West Chico schedule and existing mobile navigation preserved")
 
         browser.close()
-    (artifacts / "promo-browser-results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+    (artifacts / "homepage-media-browser-results-v2.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+    (artifacts / "homepage-playback-sources-v2.json").write_text(json.dumps(playback_records, indent=2), encoding="utf-8")
     print(json.dumps(results, indent=2))
     print(f"PASS: {len(results)} scenarios")
 
