@@ -101,6 +101,42 @@ These photos are part of the site. Keep referenced files available when replacin
 **Photo tips:** landscape (wide) orientation works best, aim for real kids-and-families
 moments over posed shots, and keep each file under ~500 KB so pages stay fast.
 
+### Homepage promo video
+
+`src/components/PromoVideo.astro` adds the full-width, uncropped 16:9 promo after
+the homepage hero. Its versioned poster and two optimized MP4s live in
+`public/media/`; the original source video is not part of the repository.
+The encodes retain the entire promo and its audio (H264/AAC, 24 fps, yuv420p,
+fast-start MP4). Desktop uses 1080p, narrow screens use 720p, and manual playback
+under motion/data restrictions also chooses 720p. Do not overwrite these URLs
+when replacing media: create new versioned filenames and update the component.
+
+The native baseline has controls, a poster, and `preload="none"`, with no autoplay.
+JavaScript enables separate Play/Pause and Sound controls below the footage.
+Muted autoplay only runs while the video is visible and the page is active.
+Reduced motion, Save-Data, and supported slow-connection signals disable autoplay;
+visitors can explicitly press Play. Explicit pauses are never undone by scrolling
+or returning to the tab, and sound is only enabled by a visitor's gesture.
+Browsers without enhancement retain native controls and the download link.
+
+No unverified captions or audio description are supplied. Before production
+publication, review the actual soundtrack for speech and provide verified captions
+if needed. The initial video implementation is for local review only; publishing
+requires separate approval. Each file is below Cloudflare Pages' 25 MiB asset limit.
+
+Optional browser regression checks use an already-installed Python Playwright
+and Microsoft Edge, without adding application dependencies. After building
+and starting `npm run preview -- --host 127.0.0.1 --port 8778`, run:
+
+```powershell
+python tests\promo_video_browser.py --url http://127.0.0.1:8778 --artifacts "$env:TEMP\bike-bus-video-review"
+```
+
+The checks cover responsive full-frame layout, real playback/control events,
+keyboard interaction, sound/loop state, reduced motion, simulated connection and
+page-visibility signals, autoplay rejection, media errors, and native no-JS playback.
+Screenshots and JSON results go to the selected artifact directory, not the site.
+
 ### 4. Route maps & optional PDF
 
 Store route maps in **`public/routes/`** and set each route's `mapImage` in

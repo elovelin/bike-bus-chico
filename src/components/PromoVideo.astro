@@ -1,0 +1,203 @@
+<section class="promo-band" aria-label="Bike Bus Chico in motion">
+  <div class="promo-inner">
+    <video
+      id="promo-video"
+      aria-label="Bike Bus Chico promo: families riding together"
+      width="1920"
+      height="1080"
+      poster="/media/bike-bus-promo-poster-v1.jpg"
+      controls
+      muted
+      playsinline
+      loop
+      preload="none"
+      data-small-src="/media/bike-bus-promo-720p-v1.mp4"
+      data-large-src="/media/bike-bus-promo-1080p-v1.mp4"
+    >
+      <source src="/media/bike-bus-promo-720p-v1.mp4" type="video/mp4" media="(max-width: 760px)" />
+      <source src="/media/bike-bus-promo-1080p-v1.mp4" type="video/mp4" />
+      <p>Your browser cannot play this video. <a href="/media/bike-bus-promo-720p-v1.mp4">Open the promo video</a>.</p>
+    </video>
+    <div class="promo-bar">
+      <p class="promo-label">This is the Bike Bus.</p>
+      <div class="promo-controls" hidden>
+        <button type="button" data-play aria-controls="promo-video" aria-pressed="false">Play video</button>
+        <button type="button" data-sound aria-controls="promo-video" aria-pressed="false">Sound on</button>
+      </div>
+      <a class="promo-download" href="/media/bike-bus-promo-720p-v1.mp4" download>Download video (3.9 MiB)</a>
+      <p class="promo-status" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<script>
+  interface Connection extends EventTarget {
+    saveData?: boolean;
+    effectiveType?: string;
+    downlink?: number;
+  }
+
+  const video = document.querySelector<HTMLVideoElement>('#promo-video');
+  const bar = document.querySelector<HTMLElement>('.promo-bar');
+  const controls = bar?.querySelector<HTMLElement>('.promo-controls');
+  const playButton = bar?.querySelector<HTMLButtonElement>('[data-play]');
+  const soundButton = bar?.querySelector<HTMLButtonElement>('[data-sound]');
+  const status = bar?.querySelector<HTMLElement>('.promo-status');
+
+  if (video && controls && playButton && soundButton && status && 'IntersectionObserver' in window) {
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const connection = (navigator as Navigator & { connection?: Connection }).connection;
+    let intent: 'auto' | 'play' | 'pause' = 'auto';
+    let manualPermission = false;
+    let visible = false;
+    let pending = false;
+    let failed = false;
+    let attempt = 0;
+    const cleanup = new AbortController();
+    const options = { signal: cleanup.signal };
+
+    const restricted = () => motion.matches || connection?.saveData === true ||
+      ['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '') ||
+      (connection?.downlink !== undefined && connection.downlink < 1.5);
+
+    const syncControls = () => {
+      playButton.textContent = video.paused ? 'Play video' : 'Pause video';
+      playButton.setAttribute('aria-pressed', String(!video.paused));
+      const audible = !video.muted && video.volume > 0;
+      soundButton.textContent = audible ? 'Sound off' : 'Sound on';
+      soundButton.setAttribute('aria-pressed', String(audible));
+    };
+
+    const reportFailure = (error: unknown) => {
+      failed = true;
+      status.textContent = 'The video could not load. Try Play again or use the download link.';
+      console.error('Bike Bus promo video failed to load or play:', error);
+      syncControls();
+    };
+
+    const pause = () => {
+      attempt++;
+      pending = false;
+      video.pause();
+      syncControls();
+    };
+
+    const start = async () => {
+      if (pending || !video.paused) return;
+      if (!video.hasAttribute('src')) {
+        const small = window.matchMedia('(max-width: 760px)').matches || restricted();
+        const source = small ? video.dataset.smallSrc : video.dataset.largeSrc;
+        if (!source) {
+          reportFailure(new Error('Missing promo video source.'));
+          return;
+        }
+        video.querySelectorAll('source').forEach((element) => element.remove());
+        video.src = source;
+      }
+      if (failed) {
+        failed = false;
+        video.load();
+      }
+      const currentAttempt = ++attempt;
+      pending = true;
+      try {
+        await video.play();
+      } catch (error) {
+        if (currentAttempt !== attempt) return;
+        if (error instanceof DOMException && error.name === 'NotAllowedError') {
+          intent = 'pause';
+          status.textContent = 'Press Play to watch the video. Sound stays off until you turn it on.';
+        } else if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          reportFailure(error);
+        }
+      } finally {
+        if (currentAttempt === attempt) {
+          pending = false;
+          syncControls();
+        }
+      }
+    };
+
+    const reconcile = () => {
+      if (!visible || document.hidden || intent === 'pause' || failed ||
+          (restricted() && !manualPermission)) {
+        pause();
+      } else {
+        void start();
+      }
+    };
+
+    playButton.addEventListener('click', () => {
+      if (!video.paused || pending) {
+        intent = 'pause';
+        manualPermission = false;
+        status.textContent = '';
+        pause();
+      } else {
+        intent = 'play';
+        manualPermission = true;
+        status.textContent = '';
+        void start();
+      }
+    }, options);
+
+    soundButton.addEventListener('click', () => {
+      video.muted = !video.muted;
+      if (!video.muted && video.volume === 0) video.volume = 1;
+      syncControls();
+    }, options);
+
+    for (const event of ['play', 'pause', 'volumechange', 'ended']) {
+      video.addEventListener(event, syncControls, options);
+    }
+    video.addEventListener('playing', () => { status.textContent = ''; }, options);
+    video.addEventListener('error', () => reportFailure(video.error), options);
+    const preferencesChanged = () => {
+      manualPermission = false;
+      if (restricted()) status.textContent = 'Autoplay is off for your motion or data preferences. Press Play to watch.';
+      else if (!failed) status.textContent = '';
+      reconcile();
+    };
+    motion.addEventListener('change', preferencesChanged, options);
+    connection?.addEventListener('change', preferencesChanged, options);
+    document.addEventListener('visibilitychange', reconcile, options);
+    window.addEventListener('pagehide', pause, options);
+    window.addEventListener('pageshow', reconcile, options);
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting && entry.intersectionRatio >= 0.1;
+      reconcile();
+    }, { threshold: [0, 0.1] });
+
+    syncControls();
+    if (restricted()) status.textContent = 'Autoplay is off for your motion or data preferences. Press Play to watch.';
+    observer.observe(video);
+    controls.hidden = false;
+    video.controls = false;
+    // Keep the native baseline on browsers without enhancement; dispose for Astro navigation.
+    document.addEventListener('astro:before-swap', () => {
+      pause();
+      observer.disconnect();
+      cleanup.abort();
+    }, { once: true, signal: cleanup.signal });
+  }
+</script>
+
+<style>
+  .promo-band { background: var(--navy); color: var(--cream); }
+  .promo-inner { max-width: 1440px; margin: auto; }
+  video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: var(--navy); }
+  .promo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 20px 28px; }
+  .promo-label { font-family: var(--label); font-size: 14px; margin: 0 auto 0 0; }
+  .promo-controls { display: flex; flex-wrap: wrap; gap: 12px; }
+  .promo-controls[hidden] { display: none; }
+  button { cursor: pointer; border: 2px solid var(--cream); border-radius: 7px; background: var(--cream); color: var(--navy); min-height: 44px; padding: 8px 16px; font-family: var(--label); font-size: 12px; }
+  button:hover { background: var(--sidewalk); }
+  button:focus-visible, a:focus-visible { outline-color: var(--orange); }
+  .promo-download { font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+  .promo-status { flex-basis: 100%; font-size: 12px; margin: 0; }
+  .promo-status:empty { display: none; }
+  @media (max-width: 760px) {
+    .promo-bar { padding: 18px 20px; gap: 14px; }
+    .promo-label { flex-basis: 100%; }
+  }
+</style>
