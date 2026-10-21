@@ -101,6 +101,23 @@ Maps viewer and embed were accessible without sign-in during preview preparation
 `mapViewerUrl` is a viewing link, not an editor link. Existing CCDS maps remain
 unchanged. A school logo identifies the destination, not school endorsement.
 
+### School chooser design review (local only)
+
+The current homepage is unchanged while two compact alternatives are reviewed.
+To include the opt-in `/review/circles/` and `/review/tiles/` homepage mockups in a
+local build, run `$env:SCHOOL_DESIGN_REVIEW='1'; npm run build` in PowerShell,
+then start the preview as usual. Each page has comparison links and
+`noindex, nofollow` metadata. A normal build omits both review pages.
+`src/components/HomePage.astro` shares the real homepage context;
+`SchoolChooser.astro` holds the two alternatives. Both use the unchanged supplied
+transparent rider-only PNGs, with school names as real text. No winner is selected.
+After starting the review preview, check both layouts and capture desktop/mobile
+comparisons with:
+
+```powershell
+python tests\school_design_browser.py --url http://127.0.0.1:8783 --artifacts "$env:TEMP\bike-bus-school-options"
+```
+
 ### 3. Photos
 
 The homepage carousel uses all 11 supplied community photos. Oriented, sRGB,
@@ -280,7 +297,7 @@ Copilot can make the change for you. Some prompts that work well:
   Thursdays, leaving at 7:45am and arriving 8:10am, with stops at Bidwell Park and
   1st & Flume."*
 - *"Change the status of the Hancock Park route to paused."*
-- *"Update the homepage headline in `src/pages/index.astro` to say '…'."*
+- *"Update the homepage headline in `src/components/HomePage.astro` to say '…'."*
 
 Always **preview with `npm run dev`** after a change to make sure it looks right.
 

@@ -1,0 +1,49 @@
+---
+import { schools } from '../data/schools';
+interface Props { variant: 'circles' | 'tiles' }
+const { variant } = Astro.props;
+---
+<div class:list={['school-chooser', variant]} data-school-design={variant}>
+  {schools.map((school) => (
+    <a class="school-choice" href={`/schools/${school.slug}/`}>
+      <span class="school-icon"><img src={school.logo} alt="" width="1000" height="1000" loading="lazy" /></span>
+      <span class="school-label">
+        <span class="school-name">{school.name}</span>
+        <span class="school-status">{school.slug === 'chico-country-day-school' ? '2 routes · Fridays' : 'Starting soon · Fridays'}</span>
+      </span>
+      {variant === 'tiles' && <span class="school-arrow" aria-hidden="true">&#8599;</span>}
+    </a>
+  ))}
+</div>
+<style>
+  .school-chooser { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .school-choice { min-width: 0; border-radius: 12px; }
+  .school-icon { display: flex; align-items: center; justify-content: center; flex: none; }
+  .school-icon img { width: 100%; height: 100%; object-fit: contain; }
+  .school-name { display: block; color: var(--blue); font-family: var(--display); font-size: 27px; line-height: 1.15; }
+  .school-status { display: block; font-size: 13px; margin-top: 8px; }
+  .school-choice:hover .school-name { text-decoration: underline; text-underline-offset: 4px; }
+  .circles { max-width: 580px; gap: 40px; }
+  .circles .school-choice { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px 8px 8px; }
+  .circles .school-icon { width: 128px; height: 128px; border-radius: 50%; background: white; border: 1px solid var(--sidewalk); margin-bottom: 16px; }
+  .circles .school-choice:hover .school-icon { border-color: var(--blue); }
+  .tiles .school-choice { display: flex; align-items: center; gap: 16px; background: white; border: 1px solid var(--sidewalk); padding: 16px 20px; }
+  .tiles .school-icon { width: 88px; height: 88px; }
+  .tiles .school-label { flex: 1; }
+  .tiles .school-arrow { color: var(--blue); font-size: 24px; }
+  .tiles .school-choice:hover { border-color: var(--blue); }
+  @media (max-width: 760px) {
+    .circles { gap: 16px; }
+    .circles .school-icon { width: 112px; height: 112px; }
+    .circles .school-name { font-size: 23px; }
+    .circles .school-status { font-size: 12px; }
+    .tiles { grid-template-columns: 1fr; gap: 12px; }
+    .tiles .school-choice { padding: 12px 16px; gap: 12px; }
+    .tiles .school-icon { width: 64px; height: 64px; }
+    .tiles .school-name { font-size: 24px; }
+    .tiles .school-status { font-size: 12px; }
+  }
+  @media (max-width: 380px) {
+    .circles { grid-template-columns: 1fr; gap: 24px; }
+  }
+</style>

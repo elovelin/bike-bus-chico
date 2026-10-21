@@ -1,0 +1,11 @@
+---
+import HomePage from '../../components/HomePage.astro';
+export function getStaticPaths() {
+  return process.env.SCHOOL_DESIGN_REVIEW === '1'
+    ? ['circles', 'tiles'].map((variant) => ({ params: { variant }, props: { variant } }))
+    : [];
+}
+interface Props { variant: 'circles' | 'tiles' }
+const { variant } = Astro.props;
+---
+<HomePage schoolDesign={variant} />

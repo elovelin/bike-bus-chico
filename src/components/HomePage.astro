@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CommunityCTA from './CommunityCTA.astro';
+import SchoolList from './SchoolList.astro';
+import SchoolChooser from './SchoolChooser.astro';
+import RideSteps from './RideSteps.astro';
+import PhotoCarousel from './PhotoCarousel.astro';
+import PromoVideo from './PromoVideo.astro';
+import { galleryPhotos } from '../data/gallery';
+interface Props { schoolDesign?: 'default' | 'circles' | 'tiles' }
+const { schoolDesign = 'default' } = Astro.props;
+const reviewing = schoolDesign !== 'default';
+---
+<BaseLayout path="/" noindex={reviewing}>
+  {reviewing && <nav class="review-nav" aria-label="School chooser design comparison">
+    <div class="wrap">
+      <strong>Design review only — {schoolDesign === 'circles' ? 'A: Circle selectors' : 'B: Compact tiles'}</strong>
+      <a href="/review/circles/#school-selector" aria-current={schoolDesign === 'circles' ? 'page' : undefined}>A: Circles</a>
+      <a href="/review/tiles/#school-selector" aria-current={schoolDesign === 'tiles' ? 'page' : undefined}>B: Tiles</a>
+      <a href="/#school-selector">Current design</a>
+    </div>
+  </nav>}
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow"><span class="accent-dot" aria-hidden="true"></span>Chico, California</p>
+        <h1><span>Ride to school.</span><span>Together.</span></h1>
+        <p class="lede">Kids, families, bikes. Bike Bus Chico brings neighbors together for the morning ride to school.</p>
+        <div class="hero-actions">
+          <a class="button" href="/routes/">Find a Bike Bus <span aria-hidden="true">&#8599;</span></a>
+          <a class="text-link" href="/ride/">New here? Start here <span aria-hidden="true">&#8599;</span></a>
+        </div>
+        <p class="hero-note">Join at the start. Hop on along the way.<br />No registration required.</p>
+      </div>
+      <PromoVideo />
+    </div>
+  </section>
+  <section class="section section-white ride-gallery" aria-labelledby="ride-gallery-title">
+    <div class="wrap">
+      <div class="section-head"><div><p class="eyebrow">From the ride</p><h2 id="ride-gallery-title">This is our morning.</h2></div><p>Friends to ride with. Neighbors to meet.<br />A little more fun on the way to school.</p></div>
+      <PhotoCarousel photos={galleryPhotos} />
+      <p class="photo-note">Photos from the Bike Bus Chico community.</p>
+      <p class="community-note">The ride is just the beginning. Families connect, route leaders share updates, and new riders ask questions. <a href="/routes/">Reach out to your ride leader</a> to join our community Discord, which is invite-only for now.</p>
+    </div>
+  </section>
+  <section class="intro-band">
+    <div class="wrap intro-grid">
+      <div><p class="eyebrow">What is a Bike Bus?</p><h2>A school bus.<br />On bikes.</h2></div>
+      <p>A group of kids and adults riding to school together, with a route, stops, and a schedule. Meet at the beginning or join along the way. We ride at a kid-friendly pace and arrive as one big crew.</p>
+    </div>
+  </section>
+  <section id="school-selector" class:list={['section', { 'compact-school-section': reviewing }]} aria-labelledby="school-selector-title">
+    <div class="wrap">
+      {schoolDesign === 'default' ? <>
+        <div class="section-head"><div><p class="eyebrow">Find your crew</p><h2 id="school-selector-title">Find your school.<br />Find your Bike Bus.</h2></div><p>Choose your school, explore its neighborhood routes, and check the ride details.</p></div>
+        <SchoolList />
+      </> : <>
+        <h2 id="school-selector-title" class="compact-school-heading">Find your school</h2>
+        <SchoolChooser variant={schoolDesign} />
+      </>}
+    </div>
+  </section>
+  <section class="section section-white">
+    <div class="wrap">
+      <div class="section-head"><div><p class="eyebrow">Your first ride</p><h2>It's easy to come along.</h2></div><a class="text-link" href="/ride/">What to know before you go <span aria-hidden="true">&#8599;</span></a></div>
+      <RideSteps />
+    </div>
+  </section>
+  <CommunityCTA heading="No Bike Bus at your school?" text="You bring the families. We'll help you think through the route, stops, and first ride." label="Start a Bike Bus" href="/start-a-route/" wheelPattern />
+</BaseLayout>
+
+<style>
+  #school-selector { scroll-margin-top: 24px; }
+  .compact-school-section { padding: 44px 0; }
+  .compact-school-heading { margin-bottom: 28px; font-size: 44px; }
+  .review-nav { background: var(--navy); color: white; padding: 12px 0; font-size: 12px; }
+  .review-nav .wrap { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .review-nav a { text-decoration: underline; text-underline-offset: 4px; padding: 6px 0; }
+  .review-nav a[aria-current] { text-decoration-color: var(--orange); text-decoration-thickness: 3px; }
+  .review-nav a:focus-visible { outline-color: white; }
+  .ride-gallery { padding: 45px 0 52px; }
+  @media (max-width: 760px) {
+    .compact-school-section { padding: 32px 0; }
+    .compact-school-heading { font-size: 36px; margin-bottom: 24px; }
+    .ride-gallery { padding: 30px 0 38px; }
+  }
+</style>
