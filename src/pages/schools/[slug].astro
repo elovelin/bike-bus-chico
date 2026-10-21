@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RouteList from '../../components/RouteList.astro';
+import CommunityCTA from '../../components/CommunityCTA.astro';
+import { schools } from '../../data/schools';
+import { routes } from '../../data/routes';
+
+export function getStaticPaths() {
+  return schools.map((school) => ({ params: { slug: school.slug }, props: { school } }));
+}
+interface Props { school: (typeof schools)[number] }
+const { school } = Astro.props;
+const schoolRoutes = routes.filter((route) => route.schoolSlug === school.slug);
+const startingSoon = schoolRoutes.every((route) => route.status === 'forming');
+---
+<BaseLayout title={`${school.name} Bike Bus`} description={school.summary} path={`/schools/${school.slug}/`}>
+  <section class="page-heading"><div class="wrap">
+    <a class="crumb" href="/routes/">&larr; All schools</a>
+    <div class="school-heading">
+      <div><p class="eyebrow">Find your school. Find your crew.</p><h1>{school.name}</h1><p class="lede">{school.summary}</p></div>
+      <img src={school.logo} alt={`${school.name} logo`} width="1000" height="1000" />
+    </div>
+    {startingSoon && <p class="notice"><strong>Starting soon — not yet running.</strong> The planned ride is on Fridays. The first ride date has not been announced.</p>}
+  </div></section>
+  <section class="section"><div class="wrap">
+    <h2 class="routes-heading">{startingSoon ? 'Your planned route.' : 'Your Friday routes.'}</h2>
+    <RouteList routes={schoolRoutes} />
+  </div></section>
+  <CommunityCTA heading="New to the Bike Bus?" text="Get to know how we ride, what to bring, and how to join a neighborhood crew." label="Plan your first ride" href="/ride/" />
+</BaseLayout>
+<style>
+  .school-heading { display: grid; grid-template-columns: 1fr 240px; gap: 45px; align-items: center; }
+  .school-heading img { width: 240px; height: 240px; object-fit: contain; }
+  .routes-heading { margin-bottom: 30px; }
+  @media (max-width: 760px) {
+    .school-heading { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 25px; }
+    .school-heading img { width: 150px; height: 150px; }
+    .school-heading h1 { font-size: 48px; }
+  }
+</style>

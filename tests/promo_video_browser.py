@@ -16,7 +16,7 @@ def run(url, artifacts):
     results = []
     playback_records = []
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(channel="msedge", headless=True)
+        browser = playwright.chromium.launch(channel="msedge", headless=True, ignore_default_args=["--hide-scrollbars"])
 
         def page_for(**kwargs):
             signals = kwargs.pop("connection", {"saveData": False, "effectiveType": "4g", "downlink": 10})
@@ -93,7 +93,7 @@ def run(url, artifacts):
             expect(page.locator("video")).to_have_attribute("controlslist", "nodownload")
             bounds = page.locator("video").bounding_box()
             overlay = page.locator(".promo-controls").bounding_box()
-            assert overlay["y"] >= bounds["y"] + bounds["height"] * 0.62, (overlay, bounds)
+            assert abs(bounds["y"] + bounds["height"] - overlay["y"] - overlay["height"] - 6) < 1, (overlay, bounds)
             assert overlay["x"] + overlay["width"] <= bounds["x"] + bounds["width"], (overlay, bounds)
             assert overlay["y"] + overlay["height"] <= bounds["y"] + bounds["height"], (overlay, bounds)
             assert abs(page.locator(".promo-band").bounding_box()["height"] - bounds["height"]) < 1
@@ -327,37 +327,24 @@ def run(url, artifacts):
             page.goto(url)
             track = page.locator(".carousel-row")
             track.scroll_into_view_if_needed()
-            previous = page.locator("[data-previous]")
-            next_button = page.locator("[data-next]")
-            expect(previous).to_have_attribute("aria-disabled", "true")
-            expect(next_button).to_have_attribute("aria-disabled", "false")
+            assert page.locator(".photo-carousel button").count() == 0
             assert page.locator(".carousel-slide").count() == 11
             assert page.locator('.carousel-slide img[loading="lazy"]').count() == 10
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
             original_scroll = track.evaluate("e => e.scrollLeft")
             page.wait_for_timeout(500)
             assert track.evaluate("e => e.scrollLeft") == original_scroll, "Carousel rotated automatically"
-            next_button.click()
-            page.wait_for_function("document.querySelector('.carousel-row').scrollLeft > 0")
-            expect(previous).to_have_attribute("aria-disabled", "false")
-            expect(next_button).to_be_focused()
             track.focus()
-            page.keyboard.press("End")
-            expect(next_button).to_have_attribute("aria-disabled", "true")
-            assert track.evaluate("e => Math.abs(e.scrollLeft - (e.scrollWidth - e.clientWidth)) < 2")
-            next_button.focus()
-            next_button.click(force=True)
-            expect(next_button).to_be_focused()
-            assert track.evaluate("e => Math.abs(e.scrollLeft - (e.scrollWidth - e.clientWidth)) < 2")
-            previous.click()
-            expect(next_button).to_have_attribute("aria-disabled", "false")
-            expect(previous).to_be_focused()
-            track.focus()
-            page.keyboard.press("Home")
-            expect(previous).to_have_attribute("aria-disabled", "true")
             page.keyboard.press("ArrowRight")
-            expect(previous).to_have_attribute("aria-disabled", "false")
-            assert page.locator(".carousel-status").inner_text()
+            page.wait_for_function("document.querySelector('.carousel-row').scrollLeft > 0")
+            expect(track).to_be_focused()
+            track.evaluate("e => e.scrollLeft = e.scrollWidth")
+            page.wait_for_timeout(300)
+            assert track.evaluate("e => Math.abs(e.scrollLeft - (e.scrollWidth - e.clientWidth)) < 2")
+            page.keyboard.press("ArrowLeft")
+            page.wait_for_function("Math.abs(document.querySelector('.carousel-row').scrollLeft - (document.querySelector('.carousel-row').scrollWidth - document.querySelector('.carousel-row').clientWidth)) > 2")
+            assert track.evaluate("e => getComputedStyle(e).overflowX === 'scroll' && getComputedStyle(e).scrollbarWidth !== 'none'")
+            assert track.evaluate("e => e.offsetHeight > e.clientHeight"), "Scrollbar must have visible space below images"
             for image in page.locator(".carousel-slide img").all():
                 image.scroll_into_view_if_needed()
                 expect(image).to_have_js_property("complete", True)
@@ -366,10 +353,9 @@ def run(url, artifacts):
                 assert image.get_attribute("width") and image.get_attribute("height")
             if width == 390:
                 page.locator(".carousel-slide").nth(6).scroll_into_view_if_needed()
-                expect(page.locator(".carousel-status")).to_have_text("Photo 7 of 11")
                 page.evaluate("document.activeElement.blur()")
                 page.locator(".ride-gallery").screenshot(path=str(artifacts / "carousel-portrait-overlay-v3-390.png"))
-            done(page, f"Carousel controls, keyboard, ends/focus, no rotation and all 11 images at {width}px")
+            done(page, f"Button-free carousel, native keyboard, scrollbar, no rotation and all 11 images at {width}px")
 
         page = page_for(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, reduced_motion="reduce")
         page.goto(url)
@@ -386,7 +372,6 @@ def run(url, artifacts):
             page.wait_for_timeout(20)
         session.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
         page.wait_for_function("document.querySelector('.carousel-row').scrollLeft > 0")
-        expect(page.locator("[data-previous]")).to_have_attribute("aria-disabled", "false")
         done(page, "Actual touch scroll gesture advances the native scroll-snap carousel")
 
         page = page_for(viewport={"width": 1440, "height": 900})
@@ -444,7 +429,7 @@ def run(url, artifacts):
         assert native_video.evaluate("v => v.currentTime > 0 && !v.paused"), "Native Play did not start playback"
         page.screenshot(path=str(artifacts / "native-controls-overlay-v3.png"))
         assert page.locator(".carousel-slide img").count() == 11
-        expect(page.locator(".carousel-controls")).to_be_hidden()
+        assert page.locator(".photo-carousel button").count() == 0
         page.locator(".carousel-row").scroll_into_view_if_needed()
         page.locator(".carousel-row").focus()
         page.keyboard.press("ArrowRight")

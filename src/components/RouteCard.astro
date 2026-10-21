@@ -7,10 +7,11 @@ const { route } = Astro.props;
 const neighborhood = route.name.split(' → ')[0];
 ---
 <article class="route-card">
-  <div class="card-top"><RouteStatus status={route.status} /><span class="eyebrow">Chico Country Day</span></div>
+  <div class="card-top"><RouteStatus status={route.status} /></div>
   <h3><a href={`/routes/${route.slug}/`}>{neighborhood}</a></h3>
   <p class="destination">to {route.school}</p>
   <RouteFacts route={route} />
+  {route.status === 'forming' && <p><strong>Not yet running. First ride date to be announced.</strong></p>}
   <p>{route.summary}</p>
   <a class="text-link" href={`/routes/${route.slug}/`}>See stops &amp; ride details <span aria-hidden="true">&#8599;</span><span class="sr-only"> for {neighborhood}</span></a>
 </article>

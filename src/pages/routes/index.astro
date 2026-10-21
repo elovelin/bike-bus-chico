@@ -1,13 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import RouteList from '../../components/RouteList.astro';
+import SchoolList from '../../components/SchoolList.astro';
 import CommunityCTA from '../../components/CommunityCTA.astro';
 ---
 <BaseLayout title="Find a Bike Bus" description="See which Bike Bus routes are rolling in Chico, find the one headed to your school, and roll with the group." path="/routes/">
   <section class="page-heading"><div class="wrap">
-    <p class="eyebrow">Routes &amp; meeting points</p><h1>Find your Bike Bus.</h1>
-    <p class="lede">Start with your neighborhood. Every route has its own stops, schedule, and ride leader. Meet at the start or join along the way.</p>
+    <p class="eyebrow">Schools &amp; neighborhood routes</p><h1>Find your Bike Bus.</h1>
+    <p class="lede">Start with your school. Explore its neighborhood routes, check the schedule, and find where to join along the way.</p>
   </div></section>
-  <section class="section"><div class="wrap"><RouteList /></div></section>
+  <section class="section"><div class="wrap"><SchoolList /></div></section>
   <CommunityCTA heading="First time? You're welcome." text="See what to bring, how the group rides, and answers to common questions." label="Plan your first ride" href="/ride/" />
 </BaseLayout>

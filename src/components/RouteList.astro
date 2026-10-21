@@ -1,6 +1,8 @@
 ---
 import RouteCard from './RouteCard.astro';
-import { routes } from '../data/routes';
+import type { Route } from '../data/routes';
+interface Props { routes: Route[] }
+const { routes } = Astro.props;
 ---
 <div class="route-grid">{routes.map((route) => <RouteCard route={route} />)}</div>
 <div class="school-invite">

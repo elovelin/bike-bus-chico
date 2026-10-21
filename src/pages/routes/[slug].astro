@@ -15,23 +15,26 @@ const { route } = Astro.props;
 const neighborhood = route.name.split(' → ')[0];
 const hasPdf = route.routePdf && fs.existsSync(path.join(process.cwd(), 'public', route.routePdf));
 const contact = route.leaderEmail ?? site.contactEmail;
+const startingSoon = route.status === 'forming';
 ---
 <BaseLayout title={route.name} description={route.summary} path={`/routes/${route.slug}/`}>
   <section class="page-heading"><div class="wrap">
-    <a class="crumb" href="/routes/">&larr; All Bike Buses</a>
+    <a class="crumb" href={`/schools/${route.schoolSlug}/`}>&larr; {route.school} routes</a>
     <p class="eyebrow">{route.school}</p><h1>{neighborhood}<br />to school.</h1>
     <p class="lede">{route.summary}</p>
+    {startingSoon && <p class="notice"><strong>Starting soon — not yet running.</strong> No first ride date has been announced. The schedule below is planned, not a currently operating service.</p>}
   </div></section>
   <section class="section"><div class="wrap detail-layout">
     <div class="panel">
-      <h2>Your stops.</h2>
+      <h2>{startingSoon ? 'The planned ride.' : 'Your stops.'}</h2>
       {route.scheduleNote && <p>{route.scheduleNote}</p>}
       <ol class="stop-list" role="list">
         {route.stops.map((stop, index) => (
           <li class="stop"><span class="stop-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><strong>{stop.name}</strong>{stop.note && <p>{stop.note}</p>}</div><span class="stop-time">{stop.time}</span></li>
         ))}
       </ol>
-      <p class="notice">Please arrive a few minutes early. The Bike Bus won't leave a listed stop before its scheduled time.</p>
+      {route.joinLocations && <section class="join-locations"><h2>Join along the way.</h2><p>Students can join the neighborhood ride at these locations along the route:</p><ul>{route.joinLocations.map((location) => <li>{location}</li>)}</ul><p>Intermediate meeting times have not been announced.</p></section>}
+      {!startingSoon && <p class="notice">Please arrive a few minutes early. The Bike Bus won't leave a listed stop before its scheduled time.</p>}
       {route.mapImage && (
         <section class="static-map" aria-labelledby="route-map-heading">
           <h2 id="route-map-heading">Your route map.</h2>
@@ -45,29 +48,32 @@ const contact = route.leaderEmail ?? site.contactEmail;
       {hasPdf && <a class="text-link map-download" href={route.routePdf}>Download printable route (PDF)</a>}
       <section class="live-map" aria-labelledby="live-map-heading">
         <h2 id="live-map-heading">Explore the live map.</h2>
-        <p>This shared Bike Bus Chico map contains neighborhood route layers. Use the stop list above for current ride times; the image above is available to download or print.</p>
-        <iframe src={site.routeMapEmbedUrl} title="Interactive Bike Bus Chico map with neighborhood route layers" width="640" height="420" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
-        <a class="text-link map-download" href={site.routeMapEmbedUrl} target="_blank" rel="noopener noreferrer">Open the live Bike Bus Chico map <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a>
+        <p>{route.mapEmbedUrl ? 'Explore the planned Parkview alignment. The schedule above applies once the ride begins.' : 'This shared Bike Bus Chico map contains neighborhood route layers. Use the stop list above for current ride times; the image above is available to download or print.'}</p>
+        <iframe src={route.mapEmbedUrl ?? site.routeMapEmbedUrl} title={route.mapEmbedUrl ? `Planned ${route.school} Bike Bus route map` : 'Interactive Bike Bus Chico map with neighborhood route layers'} width="640" height="420" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <a class="text-link map-download" href={route.mapViewerUrl ?? site.routeMapEmbedUrl} target="_blank" rel="noopener noreferrer">Open the {route.mapViewerUrl ? 'Parkview route' : 'live Bike Bus Chico'} map <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a>
       </section>
     </div>
     <aside class="detail-side" aria-label="Ride details">
       <div class="panel"><RouteStatus status={route.status} /><RouteFacts route={route} /><p class="arrival">Arrival at {route.school}: {route.arrivalTime}</p></div>
-      <div class="panel">
+      {!startingSoon && <div class="panel">
         <h2>{route.leaderName ? 'Meet your ride leader.' : 'Come ride with us.'}</h2>
         {route.leaderName ? <><p class="lede">{route.leaderName}</p><p>Ask a question, introduce your family, or let your ride leader know you're planning to join.</p></> : <p>This route is running. Contact Bike Bus Chico to connect with the crew.</p>}
         <a class="button" href={`mailto:${contact}`}>{route.leaderEmail ? 'Email the ride leader' : 'Ask about this route'} <span aria-hidden="true">&#8599;</span></a>
-      </div>
+      </div>}
       <div class="panel">
         <h2>Before you go.</h2>
         <p>Bring a working bike and helmet. Arrive at your stop a few minutes early. Younger and less experienced riders should ride with an adult.</p>
         <a class="text-link" href="/ride/">Your first ride <span aria-hidden="true">&#8599;</span></a>
       </div>
-      <div class="panel">
+      {!startingSoon && <div class="panel">
         <h2>This week's ride.</h2>
         <p>Weather, air quality, and school schedules can change a ride. Day-to-day coordination happens in our community Discord (invite-only for now). Reach out to get connected before your first ride.</p>
         <a class="text-link" href={`mailto:${contact}`}>Check with the crew <span aria-hidden="true">&#8599;</span></a>
-      </div>
+      </div>}
     </aside>
   </div></section>
-  <CommunityCTA heading="See you on the ride." text="Come ride this route, connect with the community, or start a Bike Bus at your own school." />
+  <CommunityCTA heading={startingSoon ? 'Get ready for your first ride.' : 'See you on the ride.'} text={startingSoon ? 'Learn what to bring and how we ride while this neighborhood Bike Bus gets ready to roll.' : 'Come ride this route, connect with the community, or start a Bike Bus at your own school.'} label={startingSoon ? 'Your first ride' : undefined} href={startingSoon ? '/ride/' : undefined} />
 </BaseLayout>
+<style>
+  .join-locations { margin-top: 32px; }
+</style>

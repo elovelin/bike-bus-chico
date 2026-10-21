@@ -83,8 +83,23 @@ existing block, paste it below, and change the details. To retire one, change it
 
 Statuses you can use:
 - `'active'` — running now
-- `'forming'` — being organized, not riding yet
+- `'forming'` — starting soon, not riding yet
 - `'paused'` — on a break
+
+Discovery starts with school-logo cards on the homepage and `/routes/`.
+School names, slugs, supplied logos, and introduction text live in
+`src/data/schools.ts`; `/schools/<slug>/` lists routes with the matching
+`schoolSlug`. Both Hancock Park and West Chico serve Chico Country Day School,
+and their existing detail URLs are unchanged. School logos in `public/schools/`
+are byte-for-byte copies of the supplied originals, displayed proportionally.
+
+Parkview's Centennial Avenue route is **not yet running**. Its Friday 8:00 AM
+departure and arrival by 8:10 AM are planned; no launch date is announced.
+`joinLocations` lists untimed joining locations separately from scheduled stops.
+Distance and leader contact are omitted until confirmed. Its public Google My
+Maps viewer and embed were accessible without sign-in during preview preparation;
+`mapViewerUrl` is a viewing link, not an editor link. Existing CCDS maps remain
+unchanged. A school logo identifies the destination, not school endorsement.
 
 ### 3. Photos
 
@@ -106,10 +121,11 @@ The older `ride-*.jpg` files remain available for existing direct links, but are
 not duplicated in a second homepage gallery.
 
 `PhotoCarousel.astro` shows uncropped landscape and portrait images in a
-scroll-snap row. Previous/Next buttons and Arrow/Home/End keys enhance native
-scrolling; touch swipe and the ordinary scrollable photos work without JavaScript.
-There is no automatic rotation. Reduced motion uses instant scrolling, controls
-retain focus at either end, and noninitial images use native lazy loading with
+scroll-snap row with a styled horizontal scrollbar beneath the images. There are
+no Previous/Next buttons and no carousel JavaScript. Focus the photo row and use
+the native arrow keys, drag its scrollbar, scroll horizontally, or swipe on touch
+screens. These work without JavaScript. There is no automatic rotation.
+Noninitial images use native lazy loading with
 explicit dimensions. The original gallery's community copy is retained here.
 
 ### Homepage promo video
@@ -167,9 +183,16 @@ python tests\promo_video_browser.py --url http://127.0.0.1:8778 --artifacts "$en
 The checks cover responsive full-frame layout, real playback/control events,
 keyboard interaction, sound/loop state, reduced motion, simulated connection and
 page-visibility signals, autoplay rejection, media errors, and native no-JS playback.
-The same suite verifies hero/gallery placement, all carousel images, controls,
-focus, native touch scrolling and JavaScript-disabled content. Screenshots and
+The same suite verifies hero/gallery placement, all carousel images, button-free
+scrolling, focus, native touch scrolling and JavaScript-disabled content. Screenshots and
 JSON results go to the selected artifact directory, not the site.
+
+School discovery, route facts, public map access, local links, logo proportions,
+responsive layouts, and no-JS school navigation are checked separately:
+
+```powershell
+python tests\school_pages_browser.py --url http://127.0.0.1:8778 --artifacts "$env:TEMP\bike-bus-school-review"
+```
 
 ### 4. Route maps & optional PDF
 

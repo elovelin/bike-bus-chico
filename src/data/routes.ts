@@ -28,6 +28,7 @@ export interface Route {
   name: string;
   /** Destination school. */
   school: string;
+  schoolSlug: string;
   /** Day(s) the Bike Bus runs, e.g. "Fridays". */
   day: string;
   /** Departure time from the first stop. */
@@ -37,7 +38,7 @@ export interface Route {
   /** Approximate arrival time at school. */
   arrivalTime: string;
   /** Approximate distance, e.g. "~4.5 miles". */
-  distance: string;
+  distance?: string;
   status: RouteStatus;
   /** Name of the volunteer who leads this route, e.g. "Eric Lovelin". */
   leaderName?: string;
@@ -47,6 +48,9 @@ export interface Route {
   summary: string;
   /** Optional guidance about which stops or branches have confirmed schedules. */
   scheduleNote?: string;
+  joinLocations?: string[];
+  mapEmbedUrl?: string;
+  mapViewerUrl?: string;
   /** Ordered list of stops, first to last. */
   stops: RouteStop[];
   /** Optional: path to a route map image in /public/routes/. */
@@ -61,7 +65,7 @@ export interface Route {
 /** Human-friendly labels + roles for each status. */
 export const statusMeta: Record<RouteStatus, { label: string; tone: string }> = {
   active: { label: 'Running now', tone: 'active' },
-  forming: { label: 'Forming', tone: 'forming' },
+  forming: { label: 'Starting soon', tone: 'forming' },
   paused: { label: 'On a break', tone: 'paused' },
 };
 
@@ -70,6 +74,7 @@ export const routes: Route[] = [
     slug: 'hancock-park-ccds',
     name: 'Hancock Park → Chico Country Day School',
     school: 'Chico Country Day School',
+    schoolSlug: 'chico-country-day-school',
     day: 'Fridays',
     startTime: '7:25 AM',
     arrivalTime: '~8:10 AM',
@@ -113,6 +118,7 @@ export const routes: Route[] = [
     slug: 'west-chico-ccds',
     name: 'West Chico → Chico Country Day School',
     school: 'Chico Country Day School',
+    schoolSlug: 'chico-country-day-school',
     day: 'Fridays',
     startTime: '7:50 AM',
     startLabel: 'Warner rollout',
@@ -144,6 +150,26 @@ export const routes: Route[] = [
     mapAlt: 'Two West Chico neighborhood branches converge near CSU Chico at marker C and continue to Chico Country Day School at marker D.',
     mapWidth: 1389,
     mapHeight: 1220,
+  },
+  {
+    slug: 'centennial-parkview',
+    name: 'Centennial Avenue → Parkview Elementary',
+    school: 'Parkview Elementary',
+    schoolSlug: 'parkview-elementary',
+    day: 'Fridays',
+    startTime: '8:00 AM',
+    arrivalTime: '8:10 AM',
+    status: 'forming',
+    summary:
+      'A neighborhood ride from Centennial Avenue and E 8th Street, following the bike path along E 8th Street and Bidwell Park to Parkview Elementary. Starting soon — this ride has not started yet.',
+    scheduleNote: 'Planned Friday schedule once the ride begins. The first ride date has not been announced.',
+    stops: [
+      { name: 'Centennial Avenue & E 8th Street', time: '8:00 AM' },
+      { name: 'Parkview Elementary', time: 'By 8:10 AM' },
+    ],
+    joinLocations: ['El Monte Avenue', 'Forest Avenue', 'Kern, Glenn, or El Dorado neighborhood streets closer to school'],
+    mapEmbedUrl: 'https://www.google.com/maps/d/embed?mid=1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE',
+    mapViewerUrl: 'https://www.google.com/maps/d/viewer?mid=1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE',
   },
 ];
 
