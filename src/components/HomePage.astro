@@ -1,15 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CommunityCTA from './CommunityCTA.astro';
-import SchoolList from './SchoolList.astro';
 import SchoolChooser from './SchoolChooser.astro';
 import RideSteps from './RideSteps.astro';
 import PhotoCarousel from './PhotoCarousel.astro';
 import PromoVideo from './PromoVideo.astro';
 import { galleryPhotos } from '../data/gallery';
-interface Props { schoolDesign?: 'default' | 'circles' | 'tiles' }
-const { schoolDesign = 'default' } = Astro.props;
-const reviewing = schoolDesign !== 'default';
+interface Props { schoolDesign?: 'circles' | 'tiles'; review?: boolean }
+const { schoolDesign = 'circles', review: reviewing = false } = Astro.props;
 ---
 <BaseLayout path="/" noindex={reviewing}>
   {reviewing && <nav class="review-nav" aria-label="School chooser design comparison">
@@ -49,15 +47,10 @@ const reviewing = schoolDesign !== 'default';
       <p>A group of kids and adults riding to school together, with a route, stops, and a schedule. Meet at the beginning or join along the way. We ride at a kid-friendly pace and arrive as one big crew.</p>
     </div>
   </section>
-  <section id="school-selector" class:list={['section', { 'compact-school-section': reviewing }]} aria-labelledby="school-selector-title">
+  <section id="school-selector" class="section compact-school-section" aria-labelledby="school-selector-title">
     <div class="wrap">
-      {schoolDesign === 'default' ? <>
-        <div class="section-head"><div><p class="eyebrow">Find your crew</p><h2 id="school-selector-title">Find your school.<br />Find your Bike Bus.</h2></div><p>Choose your school, explore its neighborhood routes, and check the ride details.</p></div>
-        <SchoolList />
-      </> : <>
-        <h2 id="school-selector-title" class="compact-school-heading">Find your school</h2>
-        <SchoolChooser variant={schoolDesign} />
-      </>}
+      <h2 id="school-selector-title" class="compact-school-heading">Find your school</h2>
+      <SchoolChooser variant={schoolDesign} />
     </div>
   </section>
   <section class="section section-white">

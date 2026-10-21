@@ -86,7 +86,8 @@ Statuses you can use:
 - `'forming'` — starting soon, not riding yet
 - `'paused'` — on a break
 
-Discovery starts with school-logo cards on the homepage and `/routes/`.
+Discovery starts with compact school-logo circles on the homepage and school-logo
+cards on `/routes/`.
 School names, slugs, supplied logos, and introduction text live in
 `src/data/schools.ts`; `/schools/<slug>/` lists routes with the matching
 `schoolSlug`. Both Hancock Park and West Chico serve Chico Country Day School,
@@ -103,14 +104,18 @@ unchanged. A school logo identifies the destination, not school endorsement.
 
 ### School chooser design review (local only)
 
-The current homepage is unchanged while two compact alternatives are reviewed.
+The selected circle design (A) is the normal homepage chooser. Shared CSS subgrid
+rows align the full school names and status lines across both choices, even when
+names wrap to different numbers of lines. Narrow screens stack the choices.
+The route index and dedicated school pages retain their existing layouts.
 To include the opt-in `/review/circles/` and `/review/tiles/` homepage mockups in a
 local build, run `$env:SCHOOL_DESIGN_REVIEW='1'; npm run build` in PowerShell,
 then start the preview as usual. Each page has comparison links and
 `noindex, nofollow` metadata. A normal build omits both review pages.
 `src/components/HomePage.astro` shares the real homepage context;
 `SchoolChooser.astro` holds the two alternatives. Both use the unchanged supplied
-transparent rider-only PNGs, with school names as real text. No winner is selected.
+transparent rider-only PNGs, with school names as real text. The A review URL
+mirrors the selected homepage design; B remains review-only.
 After starting the review preview, check both layouts and capture desktop/mobile
 comparisons with:
 

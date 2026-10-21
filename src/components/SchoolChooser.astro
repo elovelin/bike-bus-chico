@@ -23,8 +23,10 @@ const { variant } = Astro.props;
   .school-name { display: block; color: var(--blue); font-family: var(--display); font-size: 27px; line-height: 1.15; }
   .school-status { display: block; font-size: 13px; margin-top: 8px; }
   .school-choice:hover .school-name { text-decoration: underline; text-underline-offset: 4px; }
-  .circles { max-width: 580px; gap: 40px; }
-  .circles .school-choice { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px 8px 8px; }
+  .circles { max-width: 580px; column-gap: 40px; row-gap: 0; }
+  .circles .school-choice { display: grid; grid-template-rows: subgrid; grid-row: span 3; row-gap: 0; justify-items: center; align-items: start; text-align: center; padding: 4px 8px 8px; }
+  .circles .school-label { display: contents; }
+  .circles .school-name { align-self: stretch; }
   .circles .school-icon { width: 128px; height: 128px; border-radius: 50%; background: white; border: 1px solid var(--sidewalk); margin-bottom: 16px; }
   .circles .school-choice:hover .school-icon { border-color: var(--blue); }
   .tiles .school-choice { display: flex; align-items: center; gap: 16px; background: white; border: 1px solid var(--sidewalk); padding: 16px 20px; }
@@ -33,7 +35,7 @@ const { variant } = Astro.props;
   .tiles .school-arrow { color: var(--blue); font-size: 24px; }
   .tiles .school-choice:hover { border-color: var(--blue); }
   @media (max-width: 760px) {
-    .circles { gap: 16px; }
+    .circles { column-gap: 16px; }
     .circles .school-icon { width: 112px; height: 112px; }
     .circles .school-name { font-size: 23px; }
     .circles .school-status { font-size: 12px; }
@@ -44,6 +46,6 @@ const { variant } = Astro.props;
     .tiles .school-status { font-size: 12px; }
   }
   @media (max-width: 380px) {
-    .circles { grid-template-columns: 1fr; gap: 24px; }
+    .circles { grid-template-columns: 1fr; row-gap: 24px; }
   }
 </style>

@@ -26,7 +26,11 @@ def run(url, artifacts):
                     image.scroll_into_view_if_needed()
                     expect(image).to_have_js_property("complete", True)
                     assert image.evaluate("e => e.naturalWidth === 1000 && e.naturalHeight === 1000 && getComputedStyle(e).objectFit === 'contain'")
-                if route in ["/", "/routes/"]:
+                if route == "/":
+                    assert page.locator(".school-choice").count() == 2
+                    assert page.locator(".route-card").count() == 0
+                    expect(page.locator(".school-choice").nth(1)).to_contain_text("Starting soon")
+                if route == "/routes/":
                     assert page.locator(".school-card").count() == 2
                     assert page.locator(".route-card").count() == 0
                     expect(page.locator(".school-card").nth(1)).to_contain_text("Not yet running")
