@@ -229,15 +229,19 @@ Store route maps in **`public/routes/`** and set each route's `mapImage` in
 |---|---|
 | `hancock-park-map-3b93b79529e3.png` | Current Hancock Park route map |
 | `west-chico-map-6832c28e94a5.png` | Current two-branch West Chico route map |
+| `parkview-map-61d79e1a6e69.png` | Supplied Parkview map, unchanged at 1680 × 1268 |
 | `hancock-park-route.pdf` | A downloadable/printable route sheet |
 
-Both routes have map images. No printable PDF is currently included; the download
+All three routes have map images, shown before their interactive maps. The
+Parkview PNG is a byte-for-byte copy of the supplied screenshot; its endpoints,
+labels, and full frame are unchanged. No printable PDF is currently included; the download
 link appears only when the corresponding PDF is present. Maps show geography;
 the stop list generated from `src/data/routes.ts` is the schedule reference.
 Keep map screenshots uncropped with their original aspect ratios and visible
 attribution. Each route page offers the full-size image and a PNG download for
-static/print use, plus a lazy-loaded shared Google My Maps embed configured by
-`routeMapEmbedUrl` in `src/data/site.ts`.
+static/print use, plus a lazy-loaded Google My Maps embed. CCDS routes use the
+shared embed configured by `routeMapEmbedUrl` in `src/data/site.ts`; Parkview
+retains its own `mapEmbedUrl` and public `mapViewerUrl` in the route data.
 
 When replacing a map, use a new filename containing the first 12 lowercase
 characters of its SHA-256 hash, then update `mapImage`, `mapWidth`, and `mapHeight`.

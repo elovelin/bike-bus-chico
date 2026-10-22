@@ -1,5 +1,6 @@
 """School discovery and route regressions, using installed Playwright and Edge."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from urllib.parse import urljoin
@@ -56,6 +57,27 @@ def run(url, artifacts):
                     for invented in ["This route is running", "This week's ride", "Distance", "mile", "Meet your ride leader"]:
                         assert invented not in text, invented
                     assert page.locator(".stop").count() == 2
+                    map_image = page.locator(".static-map img")
+                    map_path = "/routes/parkview-map-61d79e1a6e69.png"
+                    expect(map_image).to_have_attribute("src", map_path)
+                    expect(page.locator(".map-link")).to_have_attribute("href", map_path)
+                    expect(page.locator(".static-map a[download]")).to_have_attribute("href", map_path)
+                    assert page.locator(".static-map").evaluate("e => Boolean(e.compareDocumentPosition(document.querySelector('.live-map')) & Node.DOCUMENT_POSITION_FOLLOWING)")
+                    map_image.scroll_into_view_if_needed()
+                    expect(map_image).to_have_js_property("complete", True)
+                    assert map_image.evaluate("e => e.naturalWidth === 1680 && e.naturalHeight === 1268")
+                    image_bounds = map_image.bounding_box()
+                    assert abs((image_bounds["width"] - 2) / (image_bounds["height"] - 2) - 1680 / 1268) < 0.01
+                    assert map_image.get_attribute("alt")
+                    if width == 320:
+                        served = page.request.get(url + map_path)
+                        assert served.ok
+                        assert hashlib.sha256(served.body()).hexdigest() == "61d79e1a6e694745bf3896d38906c85d5eeac30e45ba17c8a2f2a08ce1530d14"
+                        with page.expect_download() as pending_download:
+                            page.locator(".static-map a[download]").click()
+                        download = pending_download.value
+                        assert download.suggested_filename == "parkview-map-61d79e1a6e69.png"
+                        assert Path(download.path()).read_bytes() == served.body()
                     iframe = page.locator(".live-map iframe")
                     assert "1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE" in iframe.get_attribute("src")
                     assert "/viewer?" in page.locator(".live-map a").get_attribute("href")
@@ -71,10 +93,17 @@ def run(url, artifacts):
                     if route == "/":
                         page.locator(".ride-gallery").screenshot(path=str(artifacts / f"carousel-{width}.png"))
                     if route == "/routes/centennial-parkview/":
+                        page.locator(".static-map").screenshot(path=str(artifacts / f"parkview-static-map-{width}.png"))
                         page.locator(".live-map iframe").scroll_into_view_if_needed()
                         expect(page.frame_locator(".live-map iframe").locator("body")).to_contain_text("Parkview", timeout=30000)
                         page.wait_for_timeout(1500)
                         page.locator(".live-map").screenshot(path=str(artifacts / f"parkview-map-{width}.png"))
+                        if width == 1440:
+                            page.emulate_media(media="print")
+                            expect(page.locator(".static-map img")).to_be_visible()
+                            expect(page.locator(".live-map iframe")).to_be_hidden()
+                            page.locator(".static-map").screenshot(path=str(artifacts / "parkview-static-map-print.png"))
+                            page.emulate_media(media="screen")
                     page.evaluate("scrollTo(0, 0)")
                     page.screenshot(path=str(artifacts / f"{route.strip('/').replace('/', '-') or 'home'}-{width}.png"), full_page=True)
             results.append(f"{width}px: school cards, route ownership, facts, logos, maps and no overflow")
