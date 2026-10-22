@@ -61,6 +61,12 @@ def run(url, artifacts):
                     assert bounds[1]["y"] >= bounds[0]["y"] + bounds[0]["height"]
                 expect(page.locator(".school-name").nth(0)).to_have_text("Chico Country Day School")
                 expect(page.locator(".school-name").nth(1)).to_have_text("Parkview Elementary")
+                if variant != "tiles":
+                    phrase = page.locator(".school-phrase")
+                    expect(phrase).to_have_text("Day School")
+                    assert phrase.evaluate("e => e.getClientRects().length === 1 && getComputedStyle(e).whiteSpace === 'nowrap'")
+                    if width >= 390:
+                        assert phrase.bounding_box()["y"] > page.locator(".school-name").first.bounding_box()["y"] + 10
                 for name in page.locator(".school-name").all():
                     assert name.evaluate("e => e.scrollHeight <= e.clientHeight + 1 && e.scrollWidth <= e.clientWidth + 1")
                 section = page.locator("#school-selector")
