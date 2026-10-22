@@ -1,9 +1,11 @@
 """School discovery and route regressions, using installed Playwright and Edge."""
 import argparse
 import hashlib
+import html
 import json
+import re
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import unquote, urljoin
 
 from playwright.sync_api import sync_playwright, expect
 
@@ -23,6 +25,26 @@ def run(url, artifacts):
             for route in pages:
                 assert page.goto(url + route).ok
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (width, route)
+                if page.locator(".detail-layout").count():
+                    assert page.locator("iframe, .live-map").count() == 0
+                    assert page.locator(".static-map").count() == 1
+                    segment = page.locator(".weekly-ride .live-map-link")
+                    expect(segment.locator("h3")).to_have_text("Live map")
+                    live_link = segment.locator("a")
+                    map_id = "1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE" if route.endswith("centennial-parkview/") else "1I3-tAJaPoP14C3FNe2iG6h02vBLAAuE"
+                    expect(live_link).to_have_attribute("href", f"https://www.google.com/maps/d/viewer?mid={map_id}")
+                    expect(live_link).to_have_attribute("target", "_blank")
+                    assert page.locator('a[href*="/edit"]').count() == 0
+                    assert segment.bounding_box()["height"] < 110
+                    assert segment.bounding_box()["y"] > page.locator(".weekly-ride > a").bounding_box()["y"]
+                    sidebar = page.locator(".detail-side").bounding_box()
+                    main_panel = page.locator(".detail-layout > .panel").bounding_box()
+                    if width > 760:
+                        assert sidebar["x"] > main_panel["x"] + main_panel["width"]
+                    else:
+                        assert sidebar["y"] + sidebar["height"] <= main_panel["y"]
+                    if width in [390, 1440]:
+                        page.locator(".detail-side").screenshot(path=str(artifacts / f"{route.strip('/').replace('/', '-')}-sidebar-{width}.png"))
                 for image in page.locator('img[src^="/schools/"]').all():
                     image.scroll_into_view_if_needed()
                     expect(image).to_have_js_property("complete", True)
@@ -54,7 +76,7 @@ def run(url, artifacts):
                     text = page.locator("main").inner_text()
                     for fact in ["not yet running", "Fridays", "8:00 AM", "8:10 AM", "Centennial Avenue", "E 8th Street", "Bidwell Park", "El Monte", "Forest", "Kern", "Glenn", "El Dorado"]:
                         assert fact in text, fact
-                    for invented in ["This route is running", "This week's ride", "Distance", "mile", "Meet your ride leader"]:
+                    for invented in ["This route is running", "Distance", "mile", "Meet your ride leader"]:
                         assert invented not in text, invented
                     assert page.locator(".stop").count() == 2
                     map_image = page.locator(".static-map img")
@@ -62,7 +84,6 @@ def run(url, artifacts):
                     expect(map_image).to_have_attribute("src", map_path)
                     expect(page.locator(".map-link")).to_have_attribute("href", map_path)
                     expect(page.locator(".static-map a[download]")).to_have_attribute("href", map_path)
-                    assert page.locator(".static-map").evaluate("e => Boolean(e.compareDocumentPosition(document.querySelector('.live-map')) & Node.DOCUMENT_POSITION_FOLLOWING)")
                     map_image.scroll_into_view_if_needed()
                     expect(map_image).to_have_js_property("complete", True)
                     assert map_image.evaluate("e => e.naturalWidth === 1680 && e.naturalHeight === 1268")
@@ -78,10 +99,6 @@ def run(url, artifacts):
                         download = pending_download.value
                         assert download.suggested_filename == "parkview-map-61d79e1a6e69.png"
                         assert Path(download.path()).read_bytes() == served.body()
-                    iframe = page.locator(".live-map iframe")
-                    assert "1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE" in iframe.get_attribute("src")
-                    assert "/viewer?" in page.locator(".live-map a").get_attribute("href")
-                    assert not page.locator('a[href*="/edit"]').count()
                 if route.endswith("hancock-park-ccds/"):
                     assert page.locator(".static-map img").get_attribute("src") == "/routes/hancock-park-map-3b93b79529e3.png"
                     assert "7:25 AM" in page.locator("main").inner_text()
@@ -89,19 +106,15 @@ def run(url, artifacts):
                     assert page.locator(".static-map img").get_attribute("src") == "/routes/west-chico-map-6832c28e94a5.png"
                     for time in ["7:50 AM", "8:00 AM", "8:15 AM"]:
                         assert time in page.locator("main").inner_text()
-                if width in [390, 1440] and route in ["/", "/schools/chico-country-day-school/", "/schools/parkview-elementary/", "/routes/centennial-parkview/"]:
+                if width in [390, 1440] and route in pages:
                     if route == "/":
                         page.locator(".ride-gallery").screenshot(path=str(artifacts / f"carousel-{width}.png"))
                     if route == "/routes/centennial-parkview/":
                         page.locator(".static-map").screenshot(path=str(artifacts / f"parkview-static-map-{width}.png"))
-                        page.locator(".live-map iframe").scroll_into_view_if_needed()
-                        expect(page.frame_locator(".live-map iframe").locator("body")).to_contain_text("Parkview", timeout=30000)
-                        page.wait_for_timeout(1500)
-                        page.locator(".live-map").screenshot(path=str(artifacts / f"parkview-map-{width}.png"))
                         if width == 1440:
                             page.emulate_media(media="print")
                             expect(page.locator(".static-map img")).to_be_visible()
-                            expect(page.locator(".live-map iframe")).to_be_hidden()
+                            assert page.locator("iframe").count() == 0
                             page.locator(".static-map").screenshot(path=str(artifacts / "parkview-static-map-print.png"))
                             page.emulate_media(media="screen")
                     page.evaluate("scrollTo(0, 0)")
@@ -128,17 +141,32 @@ def run(url, artifacts):
                     assert response.ok, (href, response.status)
                     checked.add(href)
         results.append(f"{len(checked)} local page, image and download links return success")
+        generated_pages = list(Path("dist").rglob("*.html"))
+        assert generated_pages
+        for generated in generated_pages:
+            route = "/" + "/".join(generated.relative_to("dist").parts[:-1]) + "/"
+            response = page.request.get(url + route.replace("//", "/"))
+            assert response.ok, route
+            for content in [generated.read_text(encoding="utf-8"), response.text()]:
+                decoded = html.unescape(unquote(unquote(content)))
+                emails = set(re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", decoded))
+                assert emails == {"hello@bikebuschico.org"}, (route, emails)
+            page.goto(url + route.replace("//", "/"))
+            for contact_link in page.locator('a[href^="mailto:"]').all():
+                decoded = unquote(contact_link.get_attribute("href"))
+                assert decoded.split("?", 1)[0] == "mailto:hello@bikebuschico.org"
+        results.append(f"All {len(generated_pages)} generated and served HTML pages, metadata and decoded mailto contacts use only hello@bikebuschico.org")
         context.close()
 
         page = browser.new_page()
-        for kind in ["viewer", "embed"]:
-            response = page.goto(f"https://www.google.com/maps/d/{kind}?mid=1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE")
+        for map_id, label in [("1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE", "Parkview"), ("1I3-tAJaPoP14C3FNe2iG6h02vBLAAuE", "CCDS")]:
+            response = page.goto(f"https://www.google.com/maps/d/viewer?mid={map_id}")
             assert response.ok
             page.wait_for_timeout(2000)
             text = page.locator("body").inner_text()
-            assert "Parkview" in text
+            assert label in text
             assert "You need permission" not in text
-        results.append("Parkview public viewer and embed show Parkview without authentication")
+        results.append("Parkview and shared CCDS public viewer links work without authentication; route pages contain no map iframes")
         browser.close()
     (artifacts / "school-results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
     print(json.dumps(results, indent=2))

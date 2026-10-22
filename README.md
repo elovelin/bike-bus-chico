@@ -81,6 +81,10 @@ arrival time, stops along the way, and its status. To add a new route, copy an
 existing block, paste it below, and change the details. To retire one, change its
 `status` to `'paused'`.
 
+All public contact links use `site.contactEmail` (`hello@bikebuschico.org`),
+including route leader inquiries and weekly ride coordination. Do not add
+personal email addresses to route data or public page copy.
+
 Statuses you can use:
 - `'active'` — running now
 - `'forming'` — starting soon, not riding yet
@@ -99,8 +103,8 @@ and is **not yet running**. Its existing `/routes/centennial-parkview/` URL is
 unchanged. Its Friday 8:00 AM
 departure and arrival by 8:10 AM are planned; no launch date is announced.
 `joinLocations` lists untimed joining locations separately from scheduled stops.
-Distance and leader contact are omitted until confirmed. Its public Google My
-Maps viewer and embed were accessible without sign-in during preview preparation;
+Distance and a named leader are omitted until confirmed. Its public Google My
+Maps viewer was accessible without sign-in during preview preparation;
 `mapViewerUrl` is a viewing link, not an editor link. Existing CCDS maps remain
 unchanged. A school logo identifies the destination, not school endorsement.
 
@@ -232,16 +236,19 @@ Store route maps in **`public/routes/`** and set each route's `mapImage` in
 | `parkview-map-61d79e1a6e69.png` | Supplied Parkview map, unchanged at 1680 × 1268 |
 | `hancock-park-route.pdf` | A downloadable/printable route sheet |
 
-All three routes have map images, shown before their interactive maps. The
+All three routes have static map images with full-size and download links. The
 Parkview PNG is a byte-for-byte copy of the supplied screenshot; its endpoints,
 labels, and full frame are unchanged. No printable PDF is currently included; the download
 link appears only when the corresponding PDF is present. Maps show geography;
 the stop list generated from `src/data/routes.ts` is the schedule reference.
 Keep map screenshots uncropped with their original aspect ratios and visible
 attribution. Each route page offers the full-size image and a PNG download for
-static/print use, plus a lazy-loaded Google My Maps embed. CCDS routes use the
-shared embed configured by `routeMapEmbedUrl` in `src/data/site.ts`; Parkview
-retains its own `mapEmbedUrl` and public `mapViewerUrl` in the route data.
+static/print use. To avoid duplicate maps and long pages, interactive maps are
+links only: a compact **Live map** segment appears beneath **This week's ride**
+in the ride-summary sidebar (stacked above the stop list on mobile). CCDS routes
+use the shared public viewer configured by `routeMapViewerUrl` in
+`src/data/site.ts`; Parkview uses its own `mapViewerUrl` in the route data.
+There are no embedded map iframes or edit links.
 
 When replacing a map, use a new filename containing the first 12 lowercase
 characters of its SHA-256 hash, then update `mapImage`, `mapWidth`, and `mapHeight`.

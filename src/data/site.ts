@@ -30,8 +30,9 @@ export const site = {
   tagline: 'Ride to School Together',
   description:
     'Bike Bus Chico brings kids and families together to ride to school as a group — building community, confidence, and better mornings on two wheels.',
+  /** Shared mailbox for every public contact link, including ride leader inquiries. */
   contactEmail: 'hello@bikebuschico.org',
-  routeMapEmbedUrl: 'https://www.google.com/maps/d/embed?mid=1I3-tAJaPoP14C3FNe2iG6h02vBLAAuE&ehbc=2E312F',
+  routeMapViewerUrl: 'https://www.google.com/maps/d/viewer?mid=1I3-tAJaPoP14C3FNe2iG6h02vBLAAuE',
 
   /** City / area context (used in copy and SEO). */
   location: 'Chico, California',
@@ -50,7 +51,7 @@ export const nav: NavItem[] = [
 
 /**
  * The header call-to-action points to the routes list: you join
- * a Bike Bus by finding your route and contacting its ride leader directly.
+ * a Bike Bus by finding your route and contacting the crew through the shared mailbox.
  */
 export const headerCta: CallToAction = {
   label: 'Find your ride',
@@ -61,8 +62,8 @@ export const headerCta: CallToAction = {
  * The three primary actions, reused across the site via <CommunityCTA />.
  * Everything funnels toward one of these.
  * - find / join both lead to the routes list (join = find your route, then
- *   reach its ride leader). The public email also connects families to routes
- *   without a listed leader contact and supports starting new routes.
+ *   reach the crew). The shared public email connects families to every route
+ *   and supports starting new routes.
  */
 export const primaryActions = {
   find: { label: 'Find a Bike Bus', href: '/routes/' } satisfies CallToAction,

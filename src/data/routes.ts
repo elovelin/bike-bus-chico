@@ -42,14 +42,11 @@ export interface Route {
   status: RouteStatus;
   /** Name of the volunteer who leads this route, e.g. "Eric Lovelin". */
   leaderName?: string;
-  /** Email for reaching this route's leader directly to join or ask questions. */
-  leaderEmail?: string;
   /** One or two friendly sentences for cards and the route header. */
   summary: string;
   /** Optional guidance about which stops or branches have confirmed schedules. */
   scheduleNote?: string;
   joinLocations?: string[];
-  mapEmbedUrl?: string;
   mapViewerUrl?: string;
   /** Ordered list of stops, first to last. */
   stops: RouteStop[];
@@ -81,7 +78,6 @@ export const routes: Route[] = [
     distance: '~4.5 miles',
     status: 'active',
     leaderName: 'Eric Lovelin',
-    leaderEmail: 'ericlovelin@outlook.com',
     summary:
       'Our founding route. Families gather at Hancock Park and roll out together, picking up more riders at stops along the way to Bidwell Park before continuing across town to Chico Country Day School — arriving in plenty of time for the 8:25 bell.',
     stops: [
@@ -172,7 +168,6 @@ export const routes: Route[] = [
     mapAlt: 'Parkview route map showing the blue route from marker A near Centennial Avenue and E 8th Street, alongside Lower Bidwell Park, to marker B at Parkview Elementary School.',
     mapWidth: 1680,
     mapHeight: 1268,
-    mapEmbedUrl: 'https://www.google.com/maps/d/embed?mid=1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE',
     mapViewerUrl: 'https://www.google.com/maps/d/viewer?mid=1_CZ_hDQOpPKBpDb2zlrSwhmsFYHcrDE',
   },
 ];
