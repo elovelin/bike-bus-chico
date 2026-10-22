@@ -41,9 +41,15 @@ def run(url, artifacts):
                     assert "Parkview" not in page.locator(".route-grid").inner_text()
                 if route == "/schools/parkview-elementary/":
                     assert page.locator(".route-card").count() == 1
+                    expect(page.locator(".route-card h3")).to_have_text("8th St to school")
                     expect(page.locator(".route-card")).to_contain_text("Not yet running")
                     assert "Hancock" not in page.locator(".route-grid").inner_text()
                 if route == "/routes/centennial-parkview/":
+                    expect(page.locator("h1")).to_have_text("8th St to school")
+                    expect(page).to_have_title("8th St to school | Bike Bus Chico")
+                    expect(page.locator('meta[property="og:title"]')).to_have_attribute("content", "8th St to school | Bike Bus Chico")
+                    expect(page.locator('link[rel="canonical"]')).to_have_attribute("href", "https://bikebuschico.org/routes/centennial-parkview/")
+                    expect(page.locator(".crumb")).to_have_text("← Parkview Elementary routes")
                     text = page.locator("main").inner_text()
                     for fact in ["not yet running", "Fridays", "8:00 AM", "8:10 AM", "Centennial Avenue", "E 8th Street", "Bidwell Park", "El Monte", "Forest", "Kern", "Glenn", "El Dorado"]:
                         assert fact in text, fact
@@ -79,7 +85,7 @@ def run(url, artifacts):
         page.goto(url)
         page.locator('main a[href="/schools/parkview-elementary/"]').first.click()
         page.locator('main a[href="/routes/centennial-parkview/"]').first.click()
-        expect(page.locator("h1")).to_contain_text("Centennial")
+        expect(page.locator("h1")).to_have_text("8th St to school")
         page.locator(".crumb").click()
         expect(page.locator("h1")).to_have_text("Parkview Elementary")
         results.append("No-JS: homepage to school to route and back")

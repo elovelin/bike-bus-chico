@@ -153,7 +153,7 @@ export const routes: Route[] = [
   },
   {
     slug: 'centennial-parkview',
-    name: 'Centennial Avenue → Parkview Elementary',
+    name: '8th St to school',
     school: 'Parkview Elementary',
     schoolSlug: 'parkview-elementary',
     day: 'Fridays',

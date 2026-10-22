@@ -94,7 +94,9 @@ School names, slugs, supplied logos, and introduction text live in
 and their existing detail URLs are unchanged. School logos in `public/schools/`
 are byte-for-byte copies of the supplied originals, displayed proportionally.
 
-Parkview's Centennial Avenue route is **not yet running**. Its Friday 8:00 AM
+Parkview's **8th St to school** route starts at Centennial Avenue and E 8th Street
+and is **not yet running**. Its existing `/routes/centennial-parkview/` URL is
+unchanged. Its Friday 8:00 AM
 departure and arrival by 8:10 AM are planned; no launch date is announced.
 `joinLocations` lists untimed joining locations separately from scheduled stops.
 Distance and leader contact are omitted until confirmed. Its public Google My
@@ -106,7 +108,9 @@ unchanged. A school logo identifies the destination, not school endorsement.
 
 The selected circle design (A) is the normal homepage chooser. Shared CSS subgrid
 rows align the full school names and status lines across both choices, even when
-names wrap to different numbers of lines. Narrow screens stack the choices.
+names wrap to different numbers of lines. The selected labels use two lines:
+“Chico Country” / “Day School” and “Parkview” / “Elementary”. Narrow screens stack
+the choices.
 The route index and dedicated school pages retain their existing layouts.
 To include the opt-in `/review/circles/` and `/review/tiles/` homepage mockups in a
 local build, run `$env:SCHOOL_DESIGN_REVIEW='1'; npm run build` in PowerShell,

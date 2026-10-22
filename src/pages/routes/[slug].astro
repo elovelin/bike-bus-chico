@@ -20,7 +20,7 @@ const startingSoon = route.status === 'forming';
 <BaseLayout title={route.name} description={route.summary} path={`/routes/${route.slug}/`}>
   <section class="page-heading"><div class="wrap">
     <a class="crumb" href={`/schools/${route.schoolSlug}/`}>&larr; {route.school} routes</a>
-    <p class="eyebrow">{route.school}</p><h1>{neighborhood}<br />to school.</h1>
+    <p class="eyebrow">{route.school}</p><h1>{route.name.includes(' → ') ? <>{neighborhood}<br />to school.</> : route.name}</h1>
     <p class="lede">{route.summary}</p>
     {startingSoon && <p class="notice"><strong>Starting soon — not yet running.</strong> No first ride date has been announced. The schedule below is planned, not a currently operating service.</p>}
   </div></section>
@@ -49,7 +49,7 @@ const startingSoon = route.status === 'forming';
       <section class="live-map" aria-labelledby="live-map-heading">
         <h2 id="live-map-heading">Explore the live map.</h2>
         <p>{route.mapEmbedUrl ? 'Explore the planned Parkview alignment. The schedule above applies once the ride begins.' : 'This shared Bike Bus Chico map contains neighborhood route layers. Use the stop list above for current ride times; the image above is available to download or print.'}</p>
-        <iframe src={route.mapEmbedUrl ?? site.routeMapEmbedUrl} title={route.mapEmbedUrl ? `Planned ${route.school} Bike Bus route map` : 'Interactive Bike Bus Chico map with neighborhood route layers'} width="640" height="420" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <iframe src={route.mapEmbedUrl ?? site.routeMapEmbedUrl} title={route.mapEmbedUrl ? `Planned ${route.name} route map` : 'Interactive Bike Bus Chico map with neighborhood route layers'} width="640" height="420" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
         <a class="text-link map-download" href={route.mapViewerUrl ?? site.routeMapEmbedUrl} target="_blank" rel="noopener noreferrer">Open the {route.mapViewerUrl ? 'Parkview route' : 'live Bike Bus Chico'} map <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a>
       </section>
     </div>
