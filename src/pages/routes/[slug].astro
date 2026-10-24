@@ -30,7 +30,7 @@ const startingSoon = route.status === 'forming';
       {route.scheduleNote && <p>{route.scheduleNote}</p>}
       <ol class="stop-list" role="list">
         {route.stops.map((stop, index) => (
-          <li class="stop"><span class="stop-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><strong>{stop.name}</strong>{stop.note && <p>{stop.note}</p>}</div><span class="stop-time">{stop.time}</span></li>
+          <li class="stop"><span class="stop-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><strong>{stop.name}</strong>{stop.note && <p>{stop.note}</p>}</div>{stop.time && <span class="stop-time">{stop.time}</span>}</li>
         ))}
       </ol>
       {route.joinLocations && <section class="join-locations"><h2>Join along the way.</h2><p>Students can join the neighborhood ride at these locations along the route:</p><ul>{route.joinLocations.map((location) => <li>{location}</li>)}</ul><p>Intermediate meeting times have not been announced.</p></section>}
@@ -48,7 +48,7 @@ const startingSoon = route.status === 'forming';
       {hasPdf && <a class="text-link map-download" href={route.routePdf}>Download printable route (PDF)</a>}
     </div>
     <aside class="detail-side" aria-label="Ride details">
-      <div class="panel"><RouteStatus status={route.status} /><RouteFacts route={route} /><p class="arrival">Arrival at {route.school}: {route.arrivalTime}</p></div>
+      <div class="panel"><RouteStatus status={route.status} /><RouteFacts route={route} />{route.arrivalTime && <p class="arrival">Arrival at {route.school}: {route.arrivalTime}</p>}</div>
       {!startingSoon && <div class="panel">
         <h2>{route.leaderName ? 'Meet your ride leader.' : 'Come ride with us.'}</h2>
         {route.leaderName ? <><p class="lede">{route.leaderName}</p><p>Ask a question, introduce your family, or let your ride leader know you're planning to join.</p></> : <p>This route is running. Contact Bike Bus Chico to connect with the crew.</p>}

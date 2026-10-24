@@ -33,7 +33,7 @@ def run(url, artifacts):
                 expect(page.locator("#school-selector h2")).to_have_text("Find your school")
                 expect(page.locator(".school-choice")).to_have_count(2)
                 expect(page.locator(".school-card")).to_have_count(0)
-                expect(page.locator(".school-status").nth(0)).to_have_text("2 routes · Fridays")
+                expect(page.locator(".school-status").nth(0)).to_have_text("3 routes · Fridays")
                 expect(page.locator(".school-status").nth(1)).to_have_text("Starting soon · Fridays")
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                 for image in page.locator(".school-icon img").all():

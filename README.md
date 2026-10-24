@@ -94,9 +94,17 @@ Discovery starts with compact school-logo circles on the homepage and school-log
 cards on `/routes/`.
 School names, slugs, supplied logos, and introduction text live in
 `src/data/schools.ts`; `/schools/<slug>/` lists routes with the matching
-`schoolSlug`. Both Hancock Park and West Chico serve Chico Country Day School,
+`schoolSlug`. Hancock Park, West Chico, and SE Chico / Baroni Park serve Chico Country Day School,
 and their existing detail URLs are unchanged. School logos in `public/schools/`
 are byte-for-byte copies of the supplied originals, displayed proportionally.
+
+The active **SE Chico / Baroni Park** Friday route rolls out at **7:35 AM**,
+joins the Hancock Park crew at the bridge under Hwy 99 in Bidwell Park, and
+continues through downtown together. Its exact gathering spot, bridge meetup
+time, separate arrival time, distance, and leader are not yet confirmed; do not
+infer them from the map. Stop times and `arrivalTime` are optional so only
+confirmed times appear. Its content-hashed static PNG is an unaltered copy of the
+supplied map and uses the existing shared CCDS public live-map viewer link.
 
 Parkview's **8th St to school** route starts at Centennial Avenue and E 8th Street
 and is **not yet running**. Its existing `/routes/centennial-parkview/` URL is

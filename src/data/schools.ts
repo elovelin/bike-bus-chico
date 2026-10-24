@@ -3,7 +3,7 @@ export const schools = [
     slug: 'chico-country-day-school',
     name: 'Chico Country Day School',
     logo: '/schools/chico-country-day.png',
-    summary: 'Two Friday routes. Find your neighborhood crew and ride to Chico Country Day School together.',
+    summary: 'Three Friday routes. Find your neighborhood crew and ride to Chico Country Day School together.',
   },
   {
     slug: 'parkview-elementary',

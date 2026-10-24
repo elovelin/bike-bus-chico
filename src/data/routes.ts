@@ -15,8 +15,8 @@ export type RouteStatus = 'active' | 'forming' | 'paused';
 export interface RouteStop {
   /** Stop name, e.g. "Madrone Avenue Bike Bridge — south side". */
   name: string;
-  /** Scheduled time the Bike Bus reaches this stop, e.g. "7:44 AM". */
-  time: string;
+  /** Scheduled time, when confirmed, e.g. "7:44 AM". */
+  time?: string;
   /** Optional extra detail shown under the stop name. */
   note?: string;
 }
@@ -35,8 +35,8 @@ export interface Route {
   startTime: string;
   /** Optional label to identify which branch has a confirmed departure time. */
   startLabel?: string;
-  /** Approximate arrival time at school. */
-  arrivalTime: string;
+  /** Approximate arrival time at school, when confirmed. */
+  arrivalTime?: string;
   /** Approximate distance, e.g. "~4.5 miles". */
   distance?: string;
   status: RouteStatus;
@@ -79,7 +79,9 @@ export const routes: Route[] = [
     status: 'active',
     leaderName: 'Eric Lovelin',
     summary:
-      'Our founding route. Families gather at Hancock Park and roll out together, picking up more riders at stops along the way to Bidwell Park before continuing across town to Chico Country Day School — arriving in plenty of time for the 8:25 bell.',
+      'Our founding route. Families gather at Hancock Park and roll out together, picking up more riders at stops along the way to Bidwell Park. The SE Chico / Baroni Park crew joins at the bridge under Hwy 99 in Bidwell Park, then we ride through downtown to Chico Country Day School together — arriving in plenty of time for the 8:25 bell.',
+    scheduleNote:
+      'Meet the SE Chico / Baroni Park crew at the bridge under Hwy 99 in Bidwell Park, then ride through downtown together. A bridge meetup time has not been confirmed; the scheduled stops below are unchanged.',
     stops: [
       {
         name: 'Hancock Park',
@@ -146,6 +148,28 @@ export const routes: Route[] = [
     mapAlt: 'Two West Chico neighborhood branches converge near CSU Chico at marker C and continue to Chico Country Day School at marker D.',
     mapWidth: 1389,
     mapHeight: 1220,
+  },
+  {
+    slug: 'se-chico-baroni-park-ccds',
+    name: 'SE Chico / Baroni Park → Chico Country Day School',
+    school: 'Chico Country Day School',
+    schoolSlug: 'chico-country-day-school',
+    day: 'Fridays',
+    startTime: '7:35 AM',
+    status: 'active',
+    summary:
+      'Ride from SE Chico / Baroni Park, meet the Hancock Park crew at the bridge under Hwy 99 in Bidwell Park, then ride through downtown to Chico Country Day School together.',
+    scheduleNote:
+      'Roll out from SE Chico / Baroni Park at 7:35 AM on Fridays. See the map for the route and contact the crew to confirm the exact gathering spot. A bridge meetup time and a separate arrival time have not been confirmed.',
+    stops: [
+      { name: 'SE Chico / Baroni Park', time: '7:35 AM', note: 'Check the map and confirm the gathering spot with the crew before your first ride.' },
+      { name: 'Bridge under Hwy 99 in Bidwell Park', note: 'Meet the Hancock Park crew and continue through downtown together.' },
+      { name: 'Chico Country Day School', note: 'Ride to school together with the Hancock Park crew.' },
+    ],
+    mapImage: '/routes/se-chico-baroni-park-map-0d92477f6500.png',
+    mapAlt: 'Supplied SE Chico / Baroni Park route map to Chico Country Day School, including the connection with the Hancock Park crew in Bidwell Park.',
+    mapWidth: 1999,
+    mapHeight: 878,
   },
   {
     slug: 'centennial-parkview',

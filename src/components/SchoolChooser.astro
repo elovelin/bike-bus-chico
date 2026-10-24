@@ -1,5 +1,6 @@
 ---
 import { schools } from '../data/schools';
+import { routes } from '../data/routes';
 interface Props { variant: 'circles' | 'tiles' }
 const { variant } = Astro.props;
 ---
@@ -9,7 +10,7 @@ const { variant } = Astro.props;
       <span class="school-icon"><img src={school.logo} alt="" width="1000" height="1000" loading="lazy" /></span>
       <span class="school-label">
         <span class="school-name">{variant === 'circles' ? (school.slug === 'chico-country-day-school' ? <>{'Chico Country '}<span class="school-phrase">Day School</span></> : <>{'Parkview '}<span class="school-phrase">Elementary</span></>) : school.name}</span>
-        <span class="school-status">{school.slug === 'chico-country-day-school' ? '2 routes · Fridays' : 'Starting soon · Fridays'}</span>
+        <span class="school-status">{school.slug === 'chico-country-day-school' ? `${routes.filter((route) => route.schoolSlug === school.slug).length} routes · Fridays` : 'Starting soon · Fridays'}</span>
       </span>
       {variant === 'tiles' && <span class="school-arrow" aria-hidden="true">&#8599;</span>}
     </a>

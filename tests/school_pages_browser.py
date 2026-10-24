@@ -16,6 +16,7 @@ def run(url, artifacts):
         "/", "/routes/", "/schools/chico-country-day-school/",
         "/schools/parkview-elementary/", "/routes/centennial-parkview/",
         "/routes/hancock-park-ccds/", "/routes/west-chico-ccds/",
+        "/routes/se-chico-baroni-park-ccds/",
     ]
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(channel="msedge", headless=True, ignore_default_args=["--hide-scrollbars"])
@@ -52,15 +53,21 @@ def run(url, artifacts):
                 if route == "/":
                     assert page.locator(".school-choice").count() == 2
                     assert page.locator(".route-card").count() == 0
+                    expect(page.locator(".school-status").nth(0)).to_have_text("3 routes · Fridays")
                     expect(page.locator(".school-choice").nth(1)).to_contain_text("Starting soon")
                 if route == "/routes/":
                     assert page.locator(".school-card").count() == 2
                     assert page.locator(".route-card").count() == 0
+                    expect(page.locator(".school-card").nth(0)).to_contain_text("Explore 3 routes")
                     expect(page.locator(".school-card").nth(1)).to_contain_text("Not yet running")
                 if route == "/schools/chico-country-day-school/":
-                    assert page.locator(".route-card").count() == 2
+                    assert page.locator(".route-card").count() == 3
                     expect(page.locator('main a[href="/routes/hancock-park-ccds/"]').first).to_be_visible()
                     expect(page.locator('main a[href="/routes/west-chico-ccds/"]').first).to_be_visible()
+                    baroni_card = page.locator(".route-card").filter(has=page.locator('a[href="/routes/se-chico-baroni-park-ccds/"]'))
+                    expect(baroni_card).to_contain_text("Running now")
+                    expect(baroni_card).to_contain_text("7:35 AM")
+                    assert "Arrive by" not in baroni_card.inner_text()
                     assert "Parkview" not in page.locator(".route-grid").inner_text()
                 if route == "/schools/parkview-elementary/":
                     assert page.locator(".route-card").count() == 1
@@ -102,6 +109,42 @@ def run(url, artifacts):
                 if route.endswith("hancock-park-ccds/"):
                     assert page.locator(".static-map img").get_attribute("src") == "/routes/hancock-park-map-3b93b79529e3.png"
                     assert "7:25 AM" in page.locator("main").inner_text()
+                    for time in ["7:31 AM", "7:34 AM", "7:37 AM", "~8:10 AM"]:
+                        assert time in page.locator(".stop-list").inner_text()
+                    for fact in ["SE Chico / Baroni Park", "bridge under Hwy 99", "downtown"]:
+                        assert fact in page.locator("main").inner_text()
+                if route.endswith("se-chico-baroni-park-ccds/"):
+                    expect(page.locator("h1")).to_have_text("SE Chico / Baroni Parkto school.")
+                    expect(page).to_have_title("SE Chico / Baroni Park → Chico Country Day School | Bike Bus Chico")
+                    expect(page.locator(".crumb")).to_have_text("← Chico Country Day School routes")
+                    expect(page.locator('link[rel="canonical"]')).to_have_attribute("href", "https://bikebuschico.org/routes/se-chico-baroni-park-ccds/")
+                    text = page.locator("main").inner_text()
+                    expect(page.locator(".detail-side .status")).to_have_text("Running now")
+                    for fact in ["Fridays", "7:35 AM", "Hancock Park", "bridge under Hwy 99", "Bidwell Park", "downtown"]:
+                        assert fact in text, fact
+                    for invented in ["Starting soon", "not yet running", "Distance", "mile", "Meet your ride leader", "Arrive by"]:
+                        assert invented not in text, invented
+                    assert page.locator(".arrival").count() == 0
+                    assert page.locator(".stop").count() == 3
+                    expect(page.locator(".stop-time")).to_have_text(["7:35 AM"])
+                    map_image = page.locator(".static-map img")
+                    map_path = "/routes/se-chico-baroni-park-map-0d92477f6500.png"
+                    expect(map_image).to_have_attribute("src", map_path)
+                    expect(page.locator(".map-link")).to_have_attribute("href", map_path)
+                    expect(page.locator(".static-map a[download]")).to_have_attribute("href", map_path)
+                    map_image.scroll_into_view_if_needed()
+                    expect(map_image).to_have_js_property("complete", True)
+                    assert map_image.evaluate("e => e.naturalWidth === 1999 && e.naturalHeight === 878")
+                    image_bounds = map_image.bounding_box()
+                    assert abs((image_bounds["width"] - 2) / (image_bounds["height"] - 2) - 1999 / 878) < 0.01
+                    assert map_image.get_attribute("alt")
+                    if width == 320:
+                        served = page.request.get(url + map_path)
+                        assert served.ok
+                        assert hashlib.sha256(served.body()).hexdigest() == "0d92477f650030fc5fa4d9d86788cfeb8c9d0c37ad621a5896fc22ef64648824"
+                        with page.expect_download() as pending_download:
+                            page.locator(".static-map a[download]").click()
+                        assert Path(pending_download.value.path()).read_bytes() == served.body()
                 if route.endswith("west-chico-ccds/"):
                     assert page.locator(".static-map img").get_attribute("src") == "/routes/west-chico-map-6832c28e94a5.png"
                     for time in ["7:50 AM", "8:00 AM", "8:15 AM"]:
@@ -117,6 +160,13 @@ def run(url, artifacts):
                             assert page.locator("iframe").count() == 0
                             page.locator(".static-map").screenshot(path=str(artifacts / "parkview-static-map-print.png"))
                             page.emulate_media(media="screen")
+                    if route == "/routes/se-chico-baroni-park-ccds/":
+                        page.locator(".static-map").screenshot(path=str(artifacts / f"baroni-static-map-{width}.png"))
+                        if width == 1440:
+                            page.emulate_media(media="print")
+                            expect(page.locator(".static-map img")).to_be_visible()
+                            page.locator(".static-map").screenshot(path=str(artifacts / "baroni-static-map-print.png"))
+                            page.emulate_media(media="screen")
                     page.evaluate("scrollTo(0, 0)")
                     page.screenshot(path=str(artifacts / f"{route.strip('/').replace('/', '-') or 'home'}-{width}.png"), full_page=True)
             results.append(f"{width}px: school cards, route ownership, facts, logos, maps and no overflow")
@@ -131,6 +181,13 @@ def run(url, artifacts):
         page.locator(".crumb").click()
         expect(page.locator("h1")).to_have_text("Parkview Elementary")
         results.append("No-JS: homepage to school to route and back")
+        page.goto(url)
+        page.locator('main a[href="/schools/chico-country-day-school/"]').first.click()
+        page.locator('main a[href="/routes/se-chico-baroni-park-ccds/"]').first.click()
+        expect(page.locator(".stop-time")).to_have_text(["7:35 AM"])
+        page.locator(".crumb").click()
+        expect(page.locator("h1")).to_have_text("Chico Country Day School")
+        results.append("No-JS: CCDS to active Baroni route and back; exact map download and print verified")
         checked = set()
         for route in pages:
             page.goto(url + route)
