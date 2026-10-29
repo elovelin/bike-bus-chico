@@ -9,6 +9,6 @@ export const schools = [
     slug: 'parkview-elementary',
     name: 'Parkview Elementary',
     logo: '/schools/parkview.png',
-    summary: 'A Friday neighborhood ride is starting soon, following the bike path along E 8th Street and Bidwell Park to Parkview.',
+    summary: 'A Friday neighborhood ride following the bike path along E 8th Street and Bidwell Park to Parkview.',
   },
 ] as const;

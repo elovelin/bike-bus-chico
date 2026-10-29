@@ -107,9 +107,9 @@ confirmed times appear. Its content-hashed static PNG is an unaltered copy of th
 supplied map and uses the existing shared CCDS public live-map viewer link.
 
 Parkview's **8th St to school** route starts at Centennial Avenue and E 8th Street
-and is **not yet running**. Its existing `/routes/centennial-parkview/` URL is
-unchanged. Its Friday 8:00 AM
-departure and arrival by 8:10 AM are planned; no launch date is announced.
+is **active**, with its first ride confirmed for October 30, 2026. Its existing
+`/routes/centennial-parkview/` URL is unchanged. It departs Fridays at 8:00 AM
+and arrives by 8:10 AM.
 `joinLocations` lists untimed joining locations separately from scheduled stops.
 Distance and a named leader are omitted until confirmed. Its public Google My
 Maps viewer was accessible without sign-in during preview preparation;

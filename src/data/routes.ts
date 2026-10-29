@@ -179,10 +179,9 @@ export const routes: Route[] = [
     day: 'Fridays',
     startTime: '8:00 AM',
     arrivalTime: '8:10 AM',
-    status: 'forming',
+    status: 'active',
     summary:
-      'A neighborhood ride from Centennial Avenue and E 8th Street, following the bike path along E 8th Street and Bidwell Park to Parkview Elementary. Starting soon — this ride has not started yet.',
-    scheduleNote: 'Planned Friday schedule once the ride begins. The first ride date has not been announced.',
+      'A Friday neighborhood ride from Centennial Avenue and E 8th Street, following the bike path along E 8th Street and Bidwell Park to Parkview Elementary.',
     stops: [
       { name: 'Centennial Avenue & E 8th Street', time: '8:00 AM' },
       { name: 'Parkview Elementary', time: 'By 8:10 AM' },

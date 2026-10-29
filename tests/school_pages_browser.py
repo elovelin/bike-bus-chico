@@ -25,6 +25,7 @@ def run(url, artifacts):
             page = context.new_page()
             for route in pages:
                 assert page.goto(url + route).ok
+                assert not re.search(r"starting soon|not yet running|not started|has not started|first ride date|planned Friday|tomorrow", page.content(), re.I), route
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (width, route)
                 if page.locator(".detail-layout").count():
                     assert page.locator("iframe, .live-map").count() == 0
@@ -54,12 +55,12 @@ def run(url, artifacts):
                     assert page.locator(".school-choice").count() == 2
                     assert page.locator(".route-card").count() == 0
                     expect(page.locator(".school-status").nth(0)).to_have_text("3 routes · Fridays")
-                    expect(page.locator(".school-choice").nth(1)).to_contain_text("Starting soon")
+                    expect(page.locator(".school-status").nth(1)).to_have_text("Riding · Fridays")
                 if route == "/routes/":
                     assert page.locator(".school-card").count() == 2
                     assert page.locator(".route-card").count() == 0
                     expect(page.locator(".school-card").nth(0)).to_contain_text("Explore 3 routes")
-                    expect(page.locator(".school-card").nth(1)).to_contain_text("Not yet running")
+                    expect(page.locator(".school-card").nth(1)).to_contain_text("Friday rides")
                 if route == "/schools/chico-country-day-school/":
                     assert page.locator(".route-card").count() == 3
                     expect(page.locator('main a[href="/routes/hancock-park-ccds/"]').first).to_be_visible()
@@ -72,7 +73,7 @@ def run(url, artifacts):
                 if route == "/schools/parkview-elementary/":
                     assert page.locator(".route-card").count() == 1
                     expect(page.locator(".route-card h3")).to_have_text("8th St to school")
-                    expect(page.locator(".route-card")).to_contain_text("Not yet running")
+                    expect(page.locator(".route-card .status")).to_have_text("Running now")
                     assert "Hancock" not in page.locator(".route-grid").inner_text()
                 if route == "/routes/centennial-parkview/":
                     expect(page.locator("h1")).to_have_text("8th St to school")
@@ -81,9 +82,11 @@ def run(url, artifacts):
                     expect(page.locator('link[rel="canonical"]')).to_have_attribute("href", "https://bikebuschico.org/routes/centennial-parkview/")
                     expect(page.locator(".crumb")).to_have_text("← Parkview Elementary routes")
                     text = page.locator("main").inner_text()
-                    for fact in ["not yet running", "Fridays", "8:00 AM", "8:10 AM", "Centennial Avenue", "E 8th Street", "Bidwell Park", "El Monte", "Forest", "Kern", "Glenn", "El Dorado"]:
+                    expect(page.locator(".detail-side .status")).to_have_text("Running now")
+                    expect(page.locator(".weekly-ride")).to_contain_text("Weather, air quality, and school schedules can change a ride.")
+                    for fact in ["This route is running", "Fridays", "8:00 AM", "8:10 AM", "Centennial Avenue", "E 8th Street", "Bidwell Park", "El Monte", "Forest", "Kern", "Glenn", "El Dorado"]:
                         assert fact in text, fact
-                    for invented in ["This route is running", "Distance", "mile", "Meet your ride leader"]:
+                    for invented in ["Distance", "mile", "Meet your ride leader"]:
                         assert invented not in text, invented
                     assert page.locator(".stop").count() == 2
                     map_image = page.locator(".static-map img")
