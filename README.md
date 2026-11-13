@@ -139,6 +139,100 @@ comparisons with:
 python tests\school_design_browser.py --url http://127.0.0.1:8783 --artifacts "$env:TEMP\bike-bus-school-options"
 ```
 
+### Staged merchandise shop (not published)
+
+`/shop/` is opt-in, following the existing review-route staging pattern.
+Normal builds and dev sessions omit it unless `SHOP_STAGED=1`. It always uses
+the shared header/footer, has `noindex, nofollow`, is excluded from the sitemap,
+and is absent from public navigation. Staging is not access control: anyone with
+a deployed preview URL could visit it. Do not deploy the opt-in output or set the
+gate in Cloudflare's production environment without separate approval.
+
+From an isolated worktree, preview the two coming-soon cards with:
+
+```powershell
+$env:SHOP_STAGED='1'; npm run build
+npm run preview -- --host 127.0.0.1 --port 4321
+```
+
+Open `http://127.0.0.1:4321/shop/`. Alternatively, enable the same gate before
+`npm run dev`. With all Fourthwall settings absent, the page shows the requested
+Dad Hat and Tee names and clearly labeled photo placeholders, without prices,
+product photos, product IDs or checkout links.
+
+#### Connect Fourthwall later
+
+Copy `.env.example` to ignored `.env` **in the worktree**, or set its variables
+in the approved preview hosting environment. Never use `PUBLIC_` variables or
+put a credential in source, client scripts, screenshots, fixtures or logs.
+
+| Variable | Required value |
+|---|---|
+| `SHOP_STAGED` | `1` for an explicitly approved local/staging build only |
+| `FOURTHWALL_STOREFRONT_TOKEN` | Storefront token from Fourthwall Settings > For developers; not a Platform API key |
+| `FOURTHWALL_SHOP_URL` | The real existing `https://<shop>.fourthwall.com` origin, no path/query; must match the token's API shop |
+| `FOURTHWALL_DAD_HAT_PRODUCT_ID` | Actual published Dad Hat product UUID, not a variant UUID |
+| `FOURTHWALL_TEE_PRODUCT_ID` | Actual published Tee product UUID, distinct from the Hat |
+
+All four Fourthwall variables are required together. Obtain real product IDs
+from the Storefront `all` collection; no IDs or shop URLs are supplied here.
+Publish both selected **regular products** in Fourthwall with `access.type=PUBLIC`,
+at least one product image, and priced variants. Product names, images, prices
+and stock then come exclusively from the API, not the placeholder copy.
+Bundles are intentionally unsupported for these two cards.
+
+`src/lib/fourthwall.ts` runs only while Astro generates the route. It verifies
+the shop with `GET /v1/shop`, fetches every page of
+`GET /v1/collections/all/products?page=0&size=50&currency=USD`, uses the
+documented `storefront_token` query authentication only in build-time requests,
+and requires `access.type=PUBLIC`. It validates the fields it consumes:
+`images[].url/width/height`, `variants[].unitPrice.value/currency` (major currency
+units, not cents), product `state.type` (`AVAILABLE`/`SOLD_OUT`), and variant
+`stock.type` (`UNLIMITED` or `LIMITED` with integer `inStock`). Prices retain their
+returned currency; varying available variant prices show "From". Sold-out
+variants cannot be selected; unavailable products have no checkout form.
+Partial configuration, missing/unpublished selected products, malformed data,
+authentication/network errors and excessive pagination **fail the build
+explicitly** rather than silently reverting to coming-soon cards. Error messages
+never include request URLs, raw API bodies, credentials or fetch causes.
+
+The accessible, JavaScript-free variant form sends one selected real variant
+UUID to the shop's documented Fourthwall-hosted
+`/cart/checkout?products=<variantUUID>:1&currency=<currency>` entrypoint.
+Fourthwall creates the cart and redirects to hosted checkout. The site does
+not create carts at build time, store payment data or silently choose a size.
+Only existing `*.fourthwall.com` shop origins are accepted; custom checkout
+domains would require separately verified hosting/ownership. No DNS changes
+are needed. Checkout links in a connected preview are **real**, not test mode.
+
+**Static hosting limitation:** names, images, prices and availability are a
+build-time snapshot. Rebuild approved preview output after catalog changes;
+Fourthwall confirms final prices, stock, shipping and tax at checkout. Live
+inventory without rebuilding would require a separately designed server-side
+endpoint on Cloudflare, not a client-side token. Approval to publish the shop,
+expose it in navigation or enable a production build is still outstanding.
+
+Authoritative references:
+[authentication](https://docs.fourthwall.com/storefront/getting-started),
+[public collection and pagination](https://docs.fourthwall.com/storefront/products),
+[response schemas](https://docs.fourthwall.com/api-reference/storefront/collections/get-collection-products),
+[shop schema](https://docs.fourthwall.com/api-reference/storefront/shop/get-shop),
+and [hosted variant checkout](https://docs.fourthwall.com/shop-apis/cart-checkout-endpoint).
+
+Run the synthetic adapter checks with `npm run test:shop` (Node 22.18+ for
+native TypeScript loading), plus `npm run check`. The same test command builds
+real Astro output in temporary directories to verify the gate, failure behavior,
+connected variant forms, absence of credentials in logs/static assets, and
+byte-for-byte preservation of other public pages. It mocks the API only in test
+subprocesses and never writes synthetic merchandise into `dist/`. Verify an ordinary
+`npm run build` with `SHOP_STAGED` unset has no `dist\shop` output. Then build
+with the gate enabled and check responsive no-config screenshots and keyboard
+behavior using the existing Python Playwright + Edge tooling:
+
+```powershell
+python tests\shop_browser.py --url http://127.0.0.1:4321 --artifacts "$env:TEMP\bike-bus-shop-review"
+```
+
 ### 3. Photos
 
 The homepage carousel uses all 11 supplied community photos. Oriented, sRGB,
