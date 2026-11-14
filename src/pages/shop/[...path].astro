@@ -21,7 +21,7 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
     <p class="lede">Bike Bus Chico gear for kids, families, ride leaders, and supporters. Made for the school ride and wherever the road takes you.</p>
     <p class="notice shop-notice"><strong>Staged preview.</strong> This shop is not launched or linked in public navigation.
       {!hasPurchaseLinks && (allComingSoon ? ' Products are coming soon; purchase buttons are not enabled.' : ' Purchase buttons are not enabled in this preview.')}
-      {hasPurchaseLinks && ' Choose size and buy in our Printify Pop-Up Store.'}
+      {hasPurchaseLinks && ' Choose options and buy in our Printify Pop-Up Store.'}
     </p>
   </div></section>
   <section class="section shop-section" aria-labelledby="merch-heading"><div class="wrap">
@@ -33,7 +33,7 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
         const CardContent = linked ? 'a' : 'div';
         return (
         <article class="panel shop-card">
-          <CardContent class="shop-card-body" href={linked ? product.productUrl : undefined} rel={linked ? 'external' : undefined} aria-label={linked ? `${purchasable ? 'Choose size & buy' : 'View details for'} ${product.name} on Printify` : undefined}>
+          <CardContent class="shop-card-body" href={linked ? product.productUrl : undefined} rel={linked ? 'external' : undefined} aria-label={linked ? `${purchasable ? 'Choose options & buy' : 'View details for'} ${product.name} on Printify` : undefined}>
           {product.image ? (
             <div class="shop-image"><img src={product.image.src} width={product.image.width} height={product.image.height} alt={product.image.alt} loading="lazy" referrerpolicy="no-referrer" /></div>
           ) : (
@@ -47,12 +47,12 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
             <h3>{product.name}</h3>
             <p class="shop-category">{product.category}</p>
             <p>{product.description}</p>
-            {product.price && <div class="shop-pricing">
+            {product.priceVerified && product.price && <div class="shop-pricing">
               <p class="shop-price">{formatShopPrice(product.price)}</p>
               <p class="shop-shipping">Shipping calculated at checkout</p>
             </div>}
             {linked && (
-              <span class:list={['button', 'shop-action', { 'shop-buy': purchasable }]}>{purchasable ? 'Choose size & buy' : 'View details'} <span aria-hidden="true">&#8599;</span></span>
+              <span class:list={['button', 'shop-action', { 'shop-buy': purchasable }]}>{purchasable ? 'Choose options & buy' : 'View details'} <span aria-hidden="true">&#8599;</span></span>
             )}
           </div>
           </CardContent>

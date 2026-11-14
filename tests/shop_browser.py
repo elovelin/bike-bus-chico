@@ -32,11 +32,12 @@ def run(url, artifacts):
                 ])
                 expect(page.locator(".shop-planned-colors")).to_have_count(0)
                 expect(page.locator(".shop-placeholder")).to_have_count(0)
-                expect(page.locator(".shop-card .status")).to_have_text(["Coming soon"] * 3)
-                expect(page.locator(".shop-card form, .shop-card select, .shop-buy")).to_have_count(0)
+                expect(page.locator(".shop-card .status")).to_have_text(["Available"] * 3)
+                expect(page.locator(".shop-card form, .shop-card select")).to_have_count(0)
+                expect(page.locator(".shop-buy")).to_have_count(3)
                 expect(page.locator(".shop-price")).to_have_text(["USD\u00a09.99", "USD\u00a024.99", "USD\u00a024.99"])
                 expect(page.locator(".shop-shipping")).to_have_text(["Shipping calculated at checkout"] * 3)
-                expect(page.locator(".shop-action")).to_have_text(["View details ↗"] * 3)
+                expect(page.locator(".shop-action")).to_have_text(["Choose options & buy ↗"] * 3)
                 expect(page.locator(".shop-card img")).to_have_count(3)
                 for image, dimension in zip(page.locator(".shop-card img").all(), [2048, 2000, 2048]):
                     image.scroll_into_view_if_needed()
@@ -108,7 +109,7 @@ def run(url, artifacts):
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                 context.close()
         browser.close()
-    print("PASS: exact staged catalog/order/prices, genuine decoded mockups, coming-soon View details without buy controls, same-tab single-anchor cards, shared layout, staging, responsive spacing, keyboard and no-JS content.")
+    print("PASS: exact staged catalog/order/verified prices, genuine decoded mockups, available Choose options & buy controls, same-tab single-anchor cards, shared layout, staging, responsive spacing, keyboard and no-JS content.")
 
 
 def run_fixture(html_path):
@@ -137,17 +138,21 @@ def run_fixture(html_path):
                 page.set_default_timeout(10000)
                 page.goto("http://shop-fixture.test/shop/", timeout=10000)
                 links = page.locator(".shop-card a")
-                expect(links).to_have_count(4)
+                expect(links).to_have_count(6)
                 link = links.first
-                expect(link).to_have_attribute("aria-label", "Choose size & buy Synthetic available product on Printify")
+                expect(link).to_have_attribute("aria-label", "Choose options & buy Synthetic available product on Printify")
                 assert link.get_attribute("target") is None
                 expect(link.locator("a, button, input, select, [tabindex]")).to_have_count(0)
-                expect(link.locator(".shop-buy")).to_have_text("Choose size & buy ↗")
+                expect(link.locator(".shop-buy")).to_have_text("Choose options & buy ↗")
                 expect(page.locator(".shop-card").filter(has_text="Synthetic unverified product").locator("a, .shop-buy")).to_have_count(0)
                 expect(page.locator(".shop-card").filter(has_text="Synthetic URL-pending product").locator("a, .shop-buy")).to_have_count(0)
                 placeholder = page.locator(".shop-card").filter(has_text="Synthetic placeholder product")
                 expect(placeholder.locator("a, img, .shop-price, .shop-shipping, .shop-buy")).to_have_count(0)
                 expect(placeholder.locator(".shop-placeholder")).to_have_text("Coming soon Product photo coming soon.")
+                for name in ["Synthetic unverified-price product", "Synthetic missing-price product"]:
+                    card = page.locator(".shop-card").filter(has_text=name)
+                    expect(card.locator(".shop-price, .shop-shipping, .shop-buy")).to_have_count(0)
+                    expect(card.locator(".shop-action")).to_have_text("View details ↗")
                 for name in ["Synthetic unavailable product", "Synthetic upcoming product", "Synthetic purchase-unverified product"]:
                     card = page.locator(".shop-card").filter(has_text=name)
                     expect(card.locator(".shop-buy")).to_have_count(0)

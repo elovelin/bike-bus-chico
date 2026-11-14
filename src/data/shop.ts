@@ -6,6 +6,7 @@ export interface ShopProduct {
   description: string;
   image: { src: string; alt: string; width: number; height: number } | null;
   price: { amount: number; currency: string } | null;
+  priceVerified: boolean;
   status: 'coming_soon' | 'available' | 'sold-out';
   category: string;
   displayOrder: number;
@@ -21,12 +22,13 @@ export const shopProducts: readonly ShopProduct[] = [
     description: 'A youth T-shirt featuring the One Mile Bidwell Park Bike Bus Chico design.',
     image: { src: '/shop/one-mile-bidwell-park-tee-34402078.jpg', alt: 'White youth tee with the Bike Bus Chico rider crossing a Bidwell Park bridge design.', width: 2048, height: 2048 },
     price: { amount: 9.99, currency: 'USD' },
-    status: 'coming_soon',
+    priceVerified: true,
+    status: 'available',
     category: 'Youth T-shirt',
     displayOrder: 1,
     productUrl: 'https://bike-bus-chico.printify.me/product/34402078',
     productUrlVerified: true,
-    purchaseVerified: false,
+    purchaseVerified: true,
   },
   {
     id: '34402305',
@@ -34,12 +36,13 @@ export const shopProducts: readonly ShopProduct[] = [
     description: 'A trucker hat featuring the Bike Bus Chico rider and wordmark.',
     image: { src: '/shop/bike-bus-chico-trucker-hat-34402305.png', alt: 'Navy trucker hat with a white and orange Bike Bus Chico rider and wordmark.', width: 2000, height: 2000 },
     price: { amount: 24.99, currency: 'USD' },
-    status: 'coming_soon',
+    priceVerified: true,
+    status: 'available',
     category: 'Hat',
     displayOrder: 2,
     productUrl: 'https://bike-bus-chico.printify.me/product/34402305',
     productUrlVerified: true,
-    purchaseVerified: false,
+    purchaseVerified: true,
   },
   {
     id: '34402616',
@@ -47,12 +50,13 @@ export const shopProducts: readonly ShopProduct[] = [
     description: 'A youth crewneck sweatshirt featuring the bicycle-shaped Bike Bus Chico wordmark.',
     image: { src: '/shop/bike-bus-chico-kids-crewneck-34402616.jpg', alt: 'White kids crewneck sweatshirt with the blue and orange bicycle-shaped Bike Bus Chico wordmark.', width: 2048, height: 2048 },
     price: { amount: 24.99, currency: 'USD' },
-    status: 'coming_soon',
+    priceVerified: true,
+    status: 'available',
     category: 'Youth sweatshirt',
     displayOrder: 3,
     productUrl: 'https://bike-bus-chico.printify.me/product/34402616',
     productUrlVerified: true,
-    purchaseVerified: false,
+    purchaseVerified: true,
   },
 ];
 
@@ -101,8 +105,9 @@ export function validateShopProducts(products: readonly ShopProduct[]): void {
     if (!['coming_soon', 'available', 'sold-out'].includes(product.status)) {
       throw new ShopConfigurationError(`${field}.status`);
     }
-    if (typeof product.productUrlVerified !== 'boolean' || typeof product.purchaseVerified !== 'boolean') {
-      throw new ShopConfigurationError(`${field}.productUrlVerified/purchaseVerified`);
+    if (typeof product.productUrlVerified !== 'boolean' || typeof product.purchaseVerified !== 'boolean'
+        || typeof product.priceVerified !== 'boolean') {
+      throw new ShopConfigurationError(`${field}.productUrlVerified/purchaseVerified/priceVerified`);
     }
     if (product.image !== null) {
       const image = product.image;
@@ -142,14 +147,17 @@ export function validateShopProducts(products: readonly ShopProduct[]): void {
     if (product.purchaseVerified && (!product.productUrlVerified || !product.productUrl)) {
       throw new ShopConfigurationError(`${field}.purchaseVerified (requires a verified product URL)`);
     }
-    if (product.status === 'available' && (!product.image || !product.price)) {
-      throw new ShopConfigurationError(`${field} (available products need image and price)`);
+    if (product.priceVerified && !product.price) {
+      throw new ShopConfigurationError(`${field}.priceVerified (requires a supplied price)`);
+    }
+    if (product.status === 'available' && !product.image) {
+      throw new ShopConfigurationError(`${field} (available products need image)`);
     }
   }
 }
 
 export function canPurchaseProduct(product: ShopProduct): boolean {
-  return product.status === 'available' && product.purchaseVerified && canViewProductDetails(product);
+  return product.status === 'available' && product.purchaseVerified && product.priceVerified && canViewProductDetails(product);
 }
 
 export function canViewProductDetails(product: ShopProduct): boolean {

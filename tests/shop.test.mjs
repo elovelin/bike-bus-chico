@@ -12,6 +12,7 @@ const available = {
   id: 'synthetic-available', name: 'Synthetic available product', description: 'Test fixture, not merchandise.',
   image: { src: 'https://images.example.invalid/synthetic.png', alt: 'Synthetic test image', width: 800, height: 600 },
   price: { amount: 25.5, currency: 'USD' },
+  priceVerified: true,
   status: 'available', category: 'Synthetic category', displayOrder: 1,
   productUrl: 'https://external-shop.example.invalid/products/synthetic', productUrlVerified: true, purchaseVerified: true,
 };
@@ -19,7 +20,7 @@ const unavailable = {
   ...available, id: 'synthetic-unavailable', name: 'Synthetic unavailable product', status: 'sold-out', displayOrder: 2,
 };
 
-test('catalog matches the three supplied products, prices, order and verified details without enabling purchases', () => {
+test('catalog matches the three products, current verified prices and independently verified purchase paths', () => {
   validateShopProducts(shopProducts);
   assert.deepEqual(shopProducts.map((product) => product.name), [
     'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Bike Bus Chico Kids' Crewneck Sweatshirt",
@@ -37,13 +38,14 @@ test('catalog matches the three supplied products, prices, order and verified de
   ]);
   assert.deepEqual(orderShopProducts([...shopProducts].reverse()), shopProducts);
   for (const product of shopProducts) {
-    assert.equal(product.status, 'coming_soon');
+    assert.equal(product.status, 'available');
     assert.ok(product.image);
     assert.ok(existsSync(join('public', product.image.src.slice(1))));
     assert.equal(product.productUrlVerified, true);
-    assert.equal(product.purchaseVerified, false);
+    assert.equal(product.purchaseVerified, true);
+    assert.equal(product.priceVerified, true);
     assert.equal(canViewProductDetails(product), true);
-    assert.equal(canPurchaseProduct(product), false);
+    assert.equal(canPurchaseProduct(product), true);
     assert.ok(!('plannedColors' in product));
   }
 });
@@ -56,7 +58,7 @@ test('accepts safe external links but only explicit verification and availabilit
   }
   validateShopProducts([{ ...available, productUrl: 'https://another-shop.example.invalid/item?color=white#details' }]);
   validateShopProducts([{ ...available, image: { ...available.image, src: '/photos/supplied-image.png' } }]);
-  validateShopProducts([{ ...unavailable, image: null, price: null, productUrl: null, productUrlVerified: false, purchaseVerified: false }]);
+  validateShopProducts([{ ...unavailable, image: null, price: null, priceVerified: false, productUrl: null, productUrlVerified: false, purchaseVerified: false }]);
   const detailsOnly = { ...available, purchaseVerified: false };
   validateShopProducts([detailsOnly]);
   assert.equal(canViewProductDetails(detailsOnly), true);
@@ -69,8 +71,13 @@ test('accepts safe external links but only explicit verification and availabilit
   }
   assert.throws(() => validateShopProducts([{ ...available, productUrlVerified: false }]), /purchaseVerified/);
   assert.throws(() => validateShopProducts([{ ...available, productUrl: null }]), /verification requires a supplied URL/);
-  for (const field of ['image', 'price']) {
-    assert.throws(() => validateShopProducts([{ ...available, [field]: null }]), /available products need/);
+  assert.throws(() => validateShopProducts([{ ...available, image: null }]), /available products need/);
+  assert.throws(() => validateShopProducts([{ ...available, price: null }]), /priceVerified/);
+  for (const price of [available.price, null]) {
+    const unverifiedPrice = { ...available, price, priceVerified: false };
+    validateShopProducts([unverifiedPrice]);
+    assert.equal(canViewProductDetails(unverifiedPrice), true);
+    assert.equal(canPurchaseProduct(unverifiedPrice), false);
   }
 });
 
@@ -90,6 +97,7 @@ test('malformed/unsafe URLs, missing fields and invalid availability fail explic
     { category: '' }, { displayOrder: 0 }, { displayOrder: 1.5 }, { displayOrder: '1' },
     { image: undefined }, { price: undefined }, { productUrlVerified: undefined }, { productUrlVerified: 'true' },
     { purchaseVerified: undefined }, { purchaseVerified: 'true' },
+    { priceVerified: undefined }, { priceVerified: 'true' },
     { image: { ...available.image, src: 'javascript:alert(1)' } },
     { image: { ...available.image, src: '//example.invalid/image.png' } },
     { image: { ...available.image, src: '/../private.png' } },
@@ -171,10 +179,12 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
     assert.ok(!initialHtml.includes('For the ride.'));
     assert.ok(!initialHtml.includes('And the everyday.'));
     assert.ok(!initialHtml.includes('<form'));
-    assert.ok(!initialHtml.includes('Choose size &amp; buy'));
+    assert.equal((initialHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 3);
+    assert.equal((initialHtml.match(/>Choose options &amp; buy /g) ?? []).length, 3);
     assert.equal((initialHtml.match(/Shipping calculated at checkout/g) ?? []).length, 3);
-    assert.equal((initialHtml.match(/>View details /g) ?? []).length, 3);
-    assert.equal((initialHtml.match(/>Coming soon<\/span>/g) ?? []).length, 3);
+    assert.equal((initialHtml.match(/>Available<\/span>/g) ?? []).length, 3);
+    assert.ok(!initialHtml.includes('>View details '));
+    assert.ok(!initialHtml.includes('Products are currently coming soon'));
     assert.ok(!initialHtml.includes('target="_blank"'));
     assert.match(initialHtml, /More than merchandise\./);
     assert.match(initialHtml, /Made for the school ride and wherever the road takes you\./);
@@ -191,7 +201,9 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
       { ...available, id: 'synthetic-unverified', name: 'Synthetic unverified product', productUrlVerified: false, purchaseVerified: false, displayOrder: 4 },
       { ...available, id: 'synthetic-pending', name: 'Synthetic URL-pending product', productUrl: null, productUrlVerified: false, purchaseVerified: false, displayOrder: 5 },
       { ...available, id: 'synthetic-details', name: 'Synthetic purchase-unverified product', purchaseVerified: false, displayOrder: 6 },
-      { ...available, id: 'synthetic-placeholder', name: 'Synthetic placeholder product', status: 'coming_soon', image: null, price: null, productUrl: null, productUrlVerified: false, purchaseVerified: false, displayOrder: 7 },
+      { ...available, id: 'synthetic-placeholder', name: 'Synthetic placeholder product', status: 'coming_soon', image: null, price: null, priceVerified: false, productUrl: null, productUrlVerified: false, purchaseVerified: false, displayOrder: 7 },
+      { ...available, id: 'synthetic-stale-price', name: 'Synthetic unverified-price product', priceVerified: false, displayOrder: 8 },
+      { ...available, id: 'synthetic-missing-price', name: 'Synthetic missing-price product', price: null, priceVerified: false, displayOrder: 9 },
     ]);
     assert.equal(external.result.status, 0, external.result.stderr);
     const html = readFileSync(join(external.directory, 'shop', 'index.html'), 'utf8');

@@ -148,7 +148,7 @@ and is absent from public navigation. Staging is not access control: anyone with
 a deployed preview URL could visit it. Do not deploy the opt-in output or set the
 gate in Cloudflare's production environment without separate approval.
 
-From an isolated worktree, preview the three coming-soon cards with:
+From an isolated worktree, preview the three products with:
 
 ```powershell
 $env:SHOP_STAGED='1'; npm run build
@@ -157,7 +157,7 @@ npm run preview -- --host 127.0.0.1 --port 4321
 
 Open `http://127.0.0.1:4321/shop/`. Alternatively, enable the same gate before
 `npm run dev`. The catalog uses the owner's exact supplied product links,
-retail prices and order:
+product order and independently verified current public retail prices:
 
 | Order | Product | ID | Category | Retail price | Verified details page |
 |---|---|---|---|---|---|
@@ -165,10 +165,21 @@ retail prices and order:
 | 2 | Bike Bus Chico Trucker Hat | 34402305 | Hat | USD 24.99 | https://bike-bus-chico.printify.me/product/34402305 |
 | 3 | Bike Bus Chico Kids' Crewneck Sweatshirt | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
 
-All three public product pages were checked in a hydrated browser and showed
-**"This product is coming soon!"**, with Notify me rather than purchasing
-controls. Each starts `coming_soon`, with verified **details** links and
-`purchaseVerified: false`. Dashboard publication is not proof of purchasability.
+Following purchase activation, all three public product pages were rechecked in
+a hydrated browser on **2026-11-13 (Pacific)**. Every exposed size/color
+combination had an enabled Add to cart button: ten Tee variants at USD 9.99,
+two Hat variants at USD 24.99, and ten Sweatshirt variants at USD 24.99.
+No variant price range was observed, so no "From" prefix is needed.
+The Hat's fresh public price and checkout item price were both USD 24.99 for
+Navy and Navy / White, not a previously reported USD 32.03.
+For each product, selecting options and adding one item reached Printify's own
+hosted checkout Contact Information form; item prices matched and checkout
+currency was USD. No customer details, order or payment were submitted.
+Each is now `available` with `productUrlVerified`, `purchaseVerified` and
+`priceVerified` explicitly `true`. Dashboard publication alone is never proof
+of purchasability. Keep products `coming_soon`/details-only when purchasing
+cannot be verified, and withhold prices until their current public values
+are verified.
 The sweatshirt's public title still contains "Bicycle Kid's"; the site's display
 name follows the owner's latest exact wording above.
 
@@ -192,6 +203,7 @@ Printify Pop-Up product URLs, mockup assets and details supplied by the owner:
 | `description` | Verified descriptive copy; no unconfirmed funding or donation claims |
 | `image` | `null` until supplied; otherwise `{ src, alt, width, height }` using a genuine local `/...` asset or HTTPS image URL with meaningful alt text and original dimensions |
 | `price` | `null` until confirmed; otherwise `{ amount, currency }`, with a nonnegative major-unit amount and supported ISO currency code |
+| `priceVerified` | `false` until the current public price and currency are verified across exposed options; unverified prices and their shipping note are hidden |
 | `status` | `coming_soon`, `available`, or `sold-out`, explicitly confirmed rather than inferred |
 | `category` | Owner-confirmed category |
 | `displayOrder` | Unique positive integer; cards are sorted by this value |
@@ -199,20 +211,27 @@ Printify Pop-Up product URLs, mockup assets and details supplied by the owner:
 | `productUrlVerified` | `false` until the owner-provided product page has been checked; set `true` only after confirming it belongs to this shop and matches this product |
 | `purchaseVerified` | `false` until the actual product page supports choosing its options and proceeding into a real purchase path; this is separate from verifying a details page |
 
-Available products require a supplied mockup and price. Invalid
+Available products require a supplied mockup. A verified-price flag requires
+a supplied price; missing or unverified prices suppress purchasing controls.
+Invalid
 configuration fails the staged build explicitly instead of displaying guessed
 data or a broken purchase link. A valid HTTPS URL is **not** proof of a verified
 Printify product page. Confirm the actual owner-supplied link opens the intended
 product and agrees with the supplied name, mockup and price before setting
 `productUrlVerified: true`. That flag alone does not enable purchasing.
 Verification is an explicit editorial approval, not an automated API check.
-Changing a URL requires resetting both flags and repeating verification.
+Changing a URL requires resetting all verification flags and repeating checks.
 
 Verified URLs enable a clickable **"View details"** card, including for
 `coming_soon` products. Only `available` products with a verified supplied URL
-**and `purchaseVerified: true`** show **"Choose size & buy"**. Resolve the
+**and `purchaseVerified: true` and `priceVerified: true`** show
+**"Choose options & buy"**. Resolve the
 external shop's coming-soon state, verify actual option selection and its
-purchase path, then update status and purchase verification explicitly.
+purchase path, then verify current price/currency and update status and
+verification flags explicitly. Never submit an order or customer/payment
+details as part of checking reachability. If exposed options have different
+prices, do not present one variant's price as universal; review the range
+before configuring the display.
 Coming-soon and sold-out products never have purchasing controls.
 The entire linked card is one
 accessible anchor, with a styled button-like label rather than a nested button
@@ -223,8 +242,8 @@ verified details URL, fails the staged build.
 Malformed URLs, unsafe schemes, embedded credentials, onsite purchase URLs,
 invalid prices/currencies and incomplete available products are rejected.
 
-**"Shipping calculated at checkout"** appears next to supplied prices; it is
-not shown when no price is known. Size selection, purchases, shipping, tax and
+**"Shipping calculated at checkout"** appears next to verified prices; it is
+not shown when a price is missing or unverified. Option selection, purchases, shipping, tax and
 payment and fulfillment happen in the Printify Pop-Up Store, not on Bike Bus
 Chico; no Bike Bus Chico website account is needed. No store URL is invented.
 Configuration remains provider-independent: there is no supplier API,
