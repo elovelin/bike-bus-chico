@@ -17,6 +17,9 @@ def run(url, artifacts):
                 page = context.new_page()
                 assert page.goto(f"{url}/shop/").ok
                 expect(page.locator("h1")).to_have_text("Wear the ride.")
+                expect(page.locator("#merch-heading")).to_have_text("Bike Bus Chico merchandise")
+                expect(page.locator("#merch-heading")).to_have_class("sr-only")
+                expect(page.locator(".shop-section .section-head")).to_have_count(0)
                 expect(page.locator(".lede")).to_have_text(
                     "Official Bike Bus Chico merchandise for families, ride leaders, and supporters."
                 )
@@ -24,15 +27,24 @@ def run(url, artifacts):
                 expect(page.locator(".site-header")).to_have_count(1)
                 expect(page.locator(".site-footer")).to_have_count(1)
                 expect(page.locator(".shop-card")).to_have_count(2)
-                expect(page.locator(".shop-card h3")).to_have_text(["Bike Bus Chico Dad Hat", "Ride With Us Tee"])
+                expect(page.locator(".shop-card h3")).to_have_text(["Bike Bus Chico Trucker Hat", "One Mile Bidwell Park Tee"])
+                expect(page.locator(".shop-planned-colors")).to_have_count(1)
+                expect(page.locator(".shop-planned-colors")).to_have_text("Planned colors: Royal Blue and White.")
+                expect(page.locator(".shop-card").nth(0).locator(".shop-planned-colors")).to_have_count(0)
+                expect(page.locator(".shop-card").nth(1).locator(".shop-planned-colors")).to_have_count(1)
                 expect(page.locator(".shop-placeholder")).to_have_count(2)
                 expect(page.locator(".shop-card .status")).to_have_text(["Coming soon", "Coming soon"])
-                expect(page.locator(".shop-card img, .shop-card a, .shop-card form")).to_have_count(0)
+                expect(page.locator(".shop-card img, .shop-card a, .shop-card form, .shop-card select")).to_have_count(0)
                 expect(page.locator(".shop-price")).to_have_count(0)
                 expect(page.locator('.site-header a[href^="/shop"], .site-footer a[href^="/shop"]')).to_have_count(0)
                 assert "storefront_token" not in page.content()
+                assert "fourthwall" not in page.content().lower()
                 assert "charitable" not in page.locator("main").inner_text().lower()
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+                notice = page.locator(".shop-notice").bounding_box()
+                grid = page.locator(".shop-grid").bounding_box()
+                gap = grid["y"] - notice["y"] - notice["height"]
+                assert 16 <= gap <= 24, f"Excess hero-grid gap at {width}px: {gap}"
                 cards = [card.bounding_box() for card in page.locator(".shop-card").all()]
                 if width <= 760:
                     assert cards[1]["y"] >= cards[0]["y"] + cards[0]["height"]
@@ -64,7 +76,7 @@ def run(url, artifacts):
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                 context.close()
         browser.close()
-    print("PASS: staged placeholders, shared header/footer, no purchase data, no nav link, responsive layout, skip link, keyboard menu/About and no-JS content.")
+    print("PASS: staged Trucker Hat/Tee placeholders, textual planned tee colors only, shared header/footer, no purchase data, no nav link, responsive layout, skip link, keyboard menu/About and no-JS content.")
 
 
 if __name__ == "__main__":

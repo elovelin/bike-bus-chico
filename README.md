@@ -156,76 +156,53 @@ npm run preview -- --host 127.0.0.1 --port 4321
 ```
 
 Open `http://127.0.0.1:4321/shop/`. Alternatively, enable the same gate before
-`npm run dev`. With all Fourthwall settings absent, the page shows the requested
-Dad Hat and Tee names and clearly labeled photo placeholders, without prices,
-product photos, product IDs or checkout links.
+`npm run dev`. The initial product configuration shows the requested
+Bike Bus Chico Trucker Hat and One Mile Bidwell Park Tee names and clearly labeled
+photo placeholders, without prices, product photos, product IDs or checkout links.
+Royal Blue and White are textual **planned colors** on the single Tee card,
+not separate products, purchasable variants or a claim about inventory.
 
-#### Connect Fourthwall later
+#### Configure real products and external purchase links later
 
-Copy `.env.example` to ignored `.env` **in the worktree**, or set its variables
-in the approved preview hosting environment. Never use `PUBLIC_` variables or
-put a credential in source, client scripts, screenshots, fixtures or logs.
+Edit the typed, platform-agnostic catalog in **`src/data/shop.ts`** using only
+supplied or verified product details:
 
-| Variable | Required value |
+| Field | Required value |
 |---|---|
-| `SHOP_STAGED` | `1` for an explicitly approved local/staging build only |
-| `FOURTHWALL_STOREFRONT_TOKEN` | Storefront token from Fourthwall Settings > For developers; not a Platform API key |
-| `FOURTHWALL_SHOP_URL` | The real existing `https://<shop>.fourthwall.com` origin, no path/query; must match the token's API shop |
-| `FOURTHWALL_DAD_HAT_PRODUCT_ID` | Actual published Dad Hat product UUID, not a variant UUID |
-| `FOURTHWALL_TEE_PRODUCT_ID` | Actual published Tee product UUID, distinct from the Hat |
+| `name` | Verified product name |
+| `description` | Verified descriptive copy; no unconfirmed funding or donation claims |
+| `image` | `null` until supplied; otherwise `{ src, alt, width, height }` using a real local `/...` asset or HTTPS image URL with meaningful alt text and original dimensions |
+| `price` | `null` until confirmed; otherwise `{ amount, currency }`, with a nonnegative major-unit amount and supported ISO currency code |
+| `availability` | `coming-soon`, `available`, or `sold-out`, explicitly confirmed rather than inferred |
+| `purchaseUrl` | `null` until supplied; otherwise the real external product/store purchase URL using HTTPS, without embedded credentials |
+| `plannedColors` | Optional textual plans, shown only while coming soon; not purchasable variants or inventory |
 
-All four Fourthwall variables are required together. Obtain real product IDs
-from the Storefront `all` collection; no IDs or shop URLs are supplied here.
-Publish both selected **regular products** in Fourthwall with `access.type=PUBLIC`,
-at least one product image, and priced variants. Product names, images, prices
-and stock then come exclusively from the API, not the placeholder copy.
-Bundles are intentionally unsupported for these two cards.
+Available products require a verified image, price and purchase URL. Invalid
+configuration fails the staged build explicitly instead of displaying guessed
+data or a broken purchase link. Coming-soon and sold-out products never render
+purchase links, even if a URL is supplied. Malformed URLs, unsafe schemes,
+embedded credentials, onsite purchase URLs, invalid prices/currencies and
+incomplete available products are rejected.
 
-`src/lib/fourthwall.ts` runs only while Astro generates the route. It verifies
-the shop with `GET /v1/shop`, fetches every page of
-`GET /v1/collections/all/products?page=0&size=50&currency=USD`, uses the
-documented `storefront_token` query authentication only in build-time requests,
-and requires `access.type=PUBLIC`. It validates the fields it consumes:
-`images[].url/width/height`, `variants[].unitPrice.value/currency` (major currency
-units, not cents), product `state.type` (`AVAILABLE`/`SOLD_OUT`), and variant
-`stock.type` (`UNLIMITED` or `LIMITED` with integer `inStock`). Prices retain their
-returned currency; varying available variant prices show "From". Sold-out
-variants cannot be selected; unavailable products have no checkout form.
-Partial configuration, missing/unpublished selected products, malformed data,
-authentication/network errors and excessive pagination **fail the build
-explicitly** rather than silently reverting to coming-soon cards. Error messages
-never include request URLs, raw API bodies, credentials or fetch causes.
+The "Buy in external shop" link is a normal accessible link, usable without
+JavaScript. Purchases, option selection, shipping, tax and payment happen in
+the external shop, not on Bike Bus Chico. **Printify Pop-Up Store is the initial
+intended destination**, but no provider or store URL is hardwired. The website
+has no supplier API, cart, payment processor, token, product-ID or variant-ID
+requirement. `.env.example` contains only the local `SHOP_STAGED` gate.
 
-The accessible, JavaScript-free variant form sends one selected real variant
-UUID to the shop's documented Fourthwall-hosted
-`/cart/checkout?products=<variantUUID>:1&currency=<currency>` entrypoint.
-Fourthwall creates the cart and redirects to hosted checkout. The site does
-not create carts at build time, store payment data or silently choose a size.
-Only existing `*.fourthwall.com` shop origins are accepted; custom checkout
-domains would require separately verified hosting/ownership. No DNS changes
-are needed. Checkout links in a connected preview are **real**, not test mode.
-
-**Static hosting limitation:** names, images, prices and availability are a
-build-time snapshot. Rebuild approved preview output after catalog changes;
-Fourthwall confirms final prices, stock, shipping and tax at checkout. Live
-inventory without rebuilding would require a separately designed server-side
-endpoint on Cloudflare, not a client-side token. Approval to publish the shop,
+**Static hosting limitation:** product information is maintained explicitly in
+the catalog and updated by rebuilding approved preview output. Final pricing
+and stock are confirmed in the external shop. Approval to publish `/shop/`,
 expose it in navigation or enable a production build is still outstanding.
 
-Authoritative references:
-[authentication](https://docs.fourthwall.com/storefront/getting-started),
-[public collection and pagination](https://docs.fourthwall.com/storefront/products),
-[response schemas](https://docs.fourthwall.com/api-reference/storefront/collections/get-collection-products),
-[shop schema](https://docs.fourthwall.com/api-reference/storefront/shop/get-shop),
-and [hosted variant checkout](https://docs.fourthwall.com/shop-apis/cart-checkout-endpoint).
-
-Run the synthetic adapter checks with `npm run test:shop` (Node 22.18+ for
-native TypeScript loading), plus `npm run check`. The same test command builds
-real Astro output in temporary directories to verify the gate, failure behavior,
-connected variant forms, absence of credentials in logs/static assets, and
-byte-for-byte preservation of other public pages. It mocks the API only in test
-subprocesses and never writes synthetic merchandise into `dist/`. Verify an ordinary
-`npm run build` with `SHOP_STAGED` unset has no `dist\shop` output. Then build
+Run the configuration/rendering checks with `npm run test:shop` (Node 22.18+ for
+native TypeScript loading), plus `npm run check`. Test-only catalog fixtures
+and real Astro output stay in temporary directories, never in `dist/`. The
+checks cover safe URLs, availability boundaries, currency-aware prices,
+staging/indexing rules, external links and preservation of other public pages.
+Verify an ordinary `npm run build` with `SHOP_STAGED` unset has no `dist\shop`
+output. Then build
 with the gate enabled and check responsive no-config screenshots and keyboard
 behavior using the existing Python Playwright + Edge tooling:
 

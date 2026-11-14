@@ -1,74 +1,56 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { formatPrice, loadShop, type ShopData } from '../../lib/fourthwall';
+import { formatShopPrice, shopProducts, validateShopProducts, type ShopProduct } from '../../data/shop';
 
-export async function getStaticPaths() {
+export function getStaticPaths() {
   if ((process.env.SHOP_STAGED ?? import.meta.env.SHOP_STAGED) !== '1') return [];
-  const shop = await loadShop({
-    FOURTHWALL_STOREFRONT_TOKEN: process.env.FOURTHWALL_STOREFRONT_TOKEN ?? import.meta.env.FOURTHWALL_STOREFRONT_TOKEN,
-    FOURTHWALL_SHOP_URL: process.env.FOURTHWALL_SHOP_URL ?? import.meta.env.FOURTHWALL_SHOP_URL,
-    FOURTHWALL_DAD_HAT_PRODUCT_ID: process.env.FOURTHWALL_DAD_HAT_PRODUCT_ID ?? import.meta.env.FOURTHWALL_DAD_HAT_PRODUCT_ID,
-    FOURTHWALL_TEE_PRODUCT_ID: process.env.FOURTHWALL_TEE_PRODUCT_ID ?? import.meta.env.FOURTHWALL_TEE_PRODUCT_ID,
-  });
-  return [{ params: { path: undefined }, props: { shop } }];
+  validateShopProducts(shopProducts);
+  return [{ params: { path: undefined }, props: { products: shopProducts } }];
 }
 
-interface Props { shop: ShopData }
-const { shop } = Astro.props;
-const placeholders = ['Bike Bus Chico Dad Hat', 'Ride With Us Tee'];
+interface Props { products: readonly ShopProduct[] }
+const { products } = Astro.props;
+const hasPurchaseLinks = products.some((product) => product.availability === 'available');
 ---
 <BaseLayout title="Wear the ride." description="Official Bike Bus Chico merchandise for families, ride leaders, and supporters." path="/shop/" noindex>
-  <section class="page-heading"><div class="wrap">
+  <section class="page-heading shop-heading"><div class="wrap">
     <p class="eyebrow">Bike Bus Chico shop</p>
     <h1>Wear the ride.</h1>
     <p class="lede">Official Bike Bus Chico merchandise for families, ride leaders, and supporters.</p>
     <p class="notice shop-notice"><strong>Staged preview.</strong> This shop is not launched or linked in public navigation.
-      {!shop.connected && ' Merchandise is coming soon; ordering is not available.'}
-      {shop.connected && ' Checkout links open the real Fourthwall shop.'}
+      {!hasPurchaseLinks && ' Ordering is not available on this preview.'}
+      {hasPurchaseLinks && ' Purchase links open the external shop.'}
     </p>
   </div></section>
   <section class="section shop-section" aria-labelledby="merch-heading"><div class="wrap">
-    <div class="section-head"><h2 id="merch-heading">For the ride.<br />And the everyday.</h2></div>
+    <h2 class="sr-only" id="merch-heading">Bike Bus Chico merchandise</h2>
     <div class="shop-grid">
-      {!shop.connected ? placeholders.map((name) => (
+      {products.map((product) => (
         <article class="panel shop-card">
-          <div class="shop-placeholder">
-            <span class="eyebrow">Coming soon</span>
-            <p>Product photo coming soon.</p>
-          </div>
+          {product.image ? (
+            <div class="shop-image"><img src={product.image.src} width={product.image.width} height={product.image.height} alt={product.image.alt} loading="lazy" referrerpolicy="no-referrer" /></div>
+          ) : (
+            <div class="shop-placeholder">
+              <span class="eyebrow">{product.availability === 'coming-soon' ? 'Coming soon' : 'Photo pending'}</span>
+              <p>Product photo coming soon.</p>
+            </div>
+          )}
           <div class="shop-card-content">
-            <span class="status">Coming soon</span>
-            <h3>{name}</h3>
-            <p>Details, pricing, and availability will be shared when this product is ready.</p>
-          </div>
-        </article>
-      )) : shop.products.map((product, index) => (
-        <article class="panel shop-card">
-          <div class="shop-image"><img src={product.image.url} width={product.image.width} height={product.image.height} alt={product.name} loading="lazy" referrerpolicy="no-referrer" /></div>
-          <div class="shop-card-content">
-            <span class="status">{product.available ? 'Available' : 'Sold out'}</span>
+            <span class="status">{{ 'coming-soon': 'Coming soon', available: 'Available', 'sold-out': 'Sold out' }[product.availability]}</span>
             <h3>{product.name}</h3>
-            <p class="shop-price">{product.priceLabel}</p>
-            {product.available ? (
-              <form method="get" action={product.checkoutAction}>
-                <label for={`shop-variant-${index}`}>Choose your option</label>
-                <select id={`shop-variant-${index}`} name="products" required>
-                  <option value="" selected disabled>Select an option</option>
-                  {product.variants.map((variant) => (
-                    <option value={`${variant.id}:1`} disabled={!variant.available}>
-                      {variant.name} - {formatPrice(variant.price, variant.currency)}{!variant.available && ' - Sold out'}
-                    </option>
-                  ))}
-                </select>
-                <input type="hidden" name="currency" value={product.variants[0].currency} />
-                <button class="button" type="submit">Checkout on Fourthwall <span aria-hidden="true">&#8599;</span></button>
-                <p class="shop-checkout-note">One item per checkout. Final price, stock, shipping, and tax are confirmed by Fourthwall.</p>
-              </form>
-            ) : <p>This product is currently unavailable.</p>}
+            {product.availability === 'coming-soon' && product.plannedColors && product.plannedColors.length > 0 && (
+              <p class="shop-planned-colors"><strong>Planned colors:</strong> {product.plannedColors.join(' and ')}.</p>
+            )}
+            <p>{product.description}</p>
+            {product.price && <p class="shop-price">{formatShopPrice(product.price)}</p>}
+            {product.availability === 'available' && product.purchaseUrl && (
+              <a class="button" href={product.purchaseUrl} rel="external" aria-label={`Buy ${product.name} in the external shop`}>Buy in external shop <span aria-hidden="true">&#8599;</span></a>
+            )}
           </div>
         </article>
       ))}
     </div>
+    {hasPurchaseLinks && <p class="shop-checkout-note">Purchases are completed in the external shop, not on this website. Final prices, availability, shipping, and tax are confirmed there.</p>}
   </div></section>
   <section class="section section-white" aria-labelledby="shop-community-heading"><div class="wrap shop-community">
     <p class="eyebrow">More than the morning ride</p>
@@ -79,6 +61,8 @@ const placeholders = ['Bike Bus Chico Dad Hat', 'Ride With Us Tee'];
 </BaseLayout>
 
 <style>
+  .shop-heading{padding-bottom:20px}
+  .shop-heading + .shop-section{padding-top:0}
   .shop-notice{max-width:690px;margin-bottom:0}
   .shop-grid{display:grid;grid-template-columns:1fr;gap:24px}
   .shop-card{padding:0;overflow:hidden}
@@ -92,11 +76,8 @@ const placeholders = ['Bike Bus Chico Dad Hat', 'Ride With Us Tee'];
   .shop-card p{font-size:14px}
   .shop-card-content>p:last-child{margin-bottom:0}
   .shop-price{font-family:var(--label);font-weight:800}
-  .shop-card label{display:block;font-size:14px;margin-bottom:8px}
-  .shop-card select{font:inherit;font-size:14px;color:var(--navy);background:white;border:1px solid var(--navy);border-radius:7px;min-height:48px;width:100%;padding:10px;margin-bottom:18px}
-  .shop-card select:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
   .shop-card .button{width:100%}
-  .shop-checkout-note{font-size:12px!important;margin:14px 0 0}
+  .shop-checkout-note{font-size:12px;margin:18px 0 0}
   .shop-community{max-width:850px}
   .shop-community h2{margin-bottom:24px}
   .shop-community>p:not(.eyebrow){max-width:690px}
