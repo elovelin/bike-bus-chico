@@ -5,7 +5,7 @@ export interface ShopProduct {
   name: string;
   description: string;
   image: { src: string; alt: string; width: number; height: number } | null;
-  price: { amount: number; currency: string } | null;
+  price: { amount: number; currency: string; maxAmount?: number } | null;
   priceVerified: boolean;
   status: 'coming_soon' | 'available' | 'sold-out';
   category: string;
@@ -55,6 +55,20 @@ export const shopProducts: readonly ShopProduct[] = [
     category: 'Youth sweatshirt',
     displayOrder: 3,
     productUrl: 'https://bike-bus-chico.printify.me/product/34402616',
+    productUrlVerified: true,
+    purchaseVerified: true,
+  },
+  {
+    id: '34413817',
+    name: 'Bike Bus Chico Retro Ride Tee',
+    description: 'Celebrate riding together with retro racing stripes and our signature cyclist graphic.',
+    image: { src: '/shop/bike-bus-chico-retro-ride-tee-navy-34413817.jpg', alt: 'True Navy tee with blue and orange retro racing stripes, a cream cyclist and Bike Bus Chico lettering.', width: 2048, height: 2048 },
+    price: { amount: 16.99, maxAmount: 19.99, currency: 'USD' },
+    priceVerified: true,
+    status: 'available',
+    category: 'T-shirt',
+    displayOrder: 4,
+    productUrl: 'https://bike-bus-chico.printify.me/product/34413817',
     productUrlVerified: true,
     purchaseVerified: true,
   },
@@ -130,7 +144,8 @@ export function validateShopProducts(products: readonly ShopProduct[]): void {
     if (product.price !== null) {
       const price = product.price;
       if (!price || typeof price.amount !== 'number' || !Number.isFinite(price.amount)
-          || price.amount < 0 || !Intl.supportedValuesOf('currency').includes(price.currency)) {
+          || price.amount < 0 || !Intl.supportedValuesOf('currency').includes(price.currency)
+          || (price.maxAmount !== undefined && (!Number.isFinite(price.maxAmount) || price.maxAmount < price.amount))) {
         throw new ShopConfigurationError(`${field}.price`);
       }
     }
@@ -169,7 +184,8 @@ export function orderShopProducts(products: readonly ShopProduct[]): ShopProduct
 }
 
 export function formatShopPrice(price: NonNullable<ShopProduct['price']>): string {
-  return new Intl.NumberFormat('en-US', {
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency', currency: price.currency, currencyDisplay: 'symbol',
   }).format(price.amount);
+  return price.maxAmount !== undefined && price.maxAmount > price.amount ? `From ${formatted}` : formatted;
 }

@@ -155,7 +155,7 @@ production. Setting `site.shopPublished` to `false` omits the shop from normal
 builds and navigation, while the staging flag still permits local previews.
 Staging is not access control: anyone with a deployed preview URL could visit it.
 
-From an isolated worktree, preview the three products with:
+From an isolated worktree, preview the four products with:
 
 ```powershell
 $env:SHOP_STAGED='1'; npm run build
@@ -171,6 +171,15 @@ product order and independently verified current public retail prices:
 | 1 | One Mile Bidwell Park Tee | 34402078 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34402078 |
 | 2 | Bike Bus Chico Trucker Hat | 34402305 | Hat | USD 24.99 | https://bike-bus-chico.printify.me/product/34402305 |
 | 3 | Kids' Bike Bus Crewneck | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
+| 4 | Bike Bus Chico Retro Ride Tee | 34413817 | T-shirt | From USD 16.99 | https://bike-bus-chico.printify.me/product/34413817 |
+
+The Retro Ride Tee was independently checked in a hydrated public browser:
+all fourteen combinations of S through 4XL and Ivory/True Navy were available.
+S through 2XL cost USD 16.99; 3XL and 4XL cost USD 19.99 in either color.
+Its verified range is stored as `price.amount` and `price.maxAmount`, displaying
+**From $16.99** rather than implying one price for every size. Hosted checkout
+was reachable without entering customer details or submitting an order/payment.
+The fourth product is prepared for local review; adding it is not deployment approval.
 
 Following purchase activation, all three public product pages were rechecked in
 a hydrated browser on **2026-11-13 (Pacific)**, then freshly rechecked for final
@@ -194,7 +203,7 @@ cannot be verified, and withhold prices until their current public values
 are verified.
 The sweatshirt's public title still contains "Bicycle Kid's"; the site's display
 name follows the owner's latest exact wording above.
-The site displays USD prices as **$9.99 / $24.99 / $24.99** for US customers,
+The site displays USD prices as **$9.99 / $24.99 / $24.99 / From $16.99** for US customers,
 while retaining ISO currency metadata. Other currencies retain their appropriate
 currency symbols (for example, `CA$` for Canadian dollars).
 Categories stay in the configuration but are not repeated on the cards.
@@ -202,10 +211,14 @@ Product copy and the compact "Made for the ride. Priced for our families."
 mission section follow the owner's approved wording, without donation or
 proceeds claims.
 
-The three main product mockups from these exact public pages are copied unchanged
+The four product mockups from these exact public pages are copied unchanged
 under `public/shop/`: `one-mile-bidwell-park-tee-34402078.jpg` (2048x2048),
 `bike-bus-chico-trucker-hat-34402305.png` (2000x2000), and
-`bike-bus-chico-kids-crewneck-34402616.jpg` (2048x2048). They are genuine
+`bike-bus-chico-kids-crewneck-34402616.jpg` (2048x2048), and
+`bike-bus-chico-retro-ride-tee-navy-34413817.jpg` (2048x2048).
+The Retro Ride Tee image is the front mockup exposed after selecting **True Navy**
+on its exact public product page, visually confirmed against the stripe/cyclist artwork.
+They are genuine
 Printify mockups, not AI imagery, recreated artwork, cropped dashboard thumbnails,
 or recommendation images. Dimensions were checked by decoding the actual files.
 These are static local assets, not a supplier/API integration.
@@ -221,7 +234,7 @@ Printify Pop-Up product URLs, mockup assets and details supplied by the owner:
 | `name` | Owner-confirmed display name |
 | `description` | Verified descriptive copy; no unconfirmed funding or donation claims |
 | `image` | `null` until supplied; otherwise `{ src, alt, width, height }` using a genuine local `/...` asset or HTTPS image URL with meaningful alt text and original dimensions |
-| `price` | `null` until confirmed; otherwise `{ amount, currency }`, with a nonnegative major-unit amount and supported ISO currency code |
+| `price` | `null` until confirmed; otherwise `{ amount, currency, maxAmount? }`, with a nonnegative major-unit amount and supported ISO currency code. For varying prices, `amount` is the verified minimum and `maxAmount` the verified maximum; a greater maximum adds a "From" prefix |
 | `priceVerified` | `false` until the current public price and currency are verified across exposed options; unverified prices and their shipping note are hidden |
 | `status` | `coming_soon`, `available`, or `sold-out`, explicitly confirmed rather than inferred |
 | `category` | Owner-confirmed category |
@@ -304,7 +317,7 @@ python tests\shop_browser.py --production --url http://127.0.0.1:4321 --artifact
 #### Release checklist
 
 - Publication and the Shop navigation link have owner approval.
-- Recheck all three exact public URLs, current variant prices and Add to cart/
+- Recheck all configured exact public URLs, current variant prices and Add to cart/
   hosted checkout reachability; reset verification flags for any unavailable,
   changed or unverified product. Do not enter customer details or place an order.
 - Review Printify's Navy Hat checkout thumbnail mapping; the public sweatshirt

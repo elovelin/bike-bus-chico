@@ -21,7 +21,7 @@ const unavailable = {
   ...available, id: 'synthetic-unavailable', name: 'Synthetic unavailable product', status: 'sold-out', displayOrder: 2,
 };
 
-test('catalog matches the three products, current verified prices and independently verified purchase paths', () => {
+test('catalog matches the four products, current verified prices and independently verified purchase paths', () => {
   assert.equal(site.shopPublished, true);
   assert.deepEqual(nav.map(({ label, href }) => [label, href]), [
     ['Find a Bike Bus', '/routes/'], ['Ride With Us', '/ride/'],
@@ -31,22 +31,26 @@ test('catalog matches the three products, current verified prices and independen
   validateShopProducts(shopProducts);
   assert.deepEqual(shopProducts.map((product) => product.name), [
     'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Kids' Bike Bus Crewneck",
+    'Bike Bus Chico Retro Ride Tee',
   ]);
   assert.deepEqual(shopProducts.map((product) => product.description), [
     "Celebrate Chico's One Mile Recreation Area with this colorful youth tee featuring a Bike Bus ride through Bidwell Park.",
     'Show your Bike Bus Chico pride on the school ride and beyond with our classic trucker hat.',
     'A cozy layer for chilly school mornings, featuring our bicycle-inspired Bike Bus Chico wordmark.',
+    'Celebrate riding together with retro racing stripes and our signature cyclist graphic.',
   ]);
-  assert.deepEqual(shopProducts.map((product) => product.id), ['34402078', '34402305', '34402616']);
-  assert.deepEqual(shopProducts.map((product) => product.category), ['Youth T-shirt', 'Hat', 'Youth sweatshirt']);
-  assert.deepEqual(shopProducts.map((product) => product.displayOrder), [1, 2, 3]);
+  assert.deepEqual(shopProducts.map((product) => product.id), ['34402078', '34402305', '34402616', '34413817']);
+  assert.deepEqual(shopProducts.map((product) => product.category), ['Youth T-shirt', 'Hat', 'Youth sweatshirt', 'T-shirt']);
+  assert.deepEqual(shopProducts.map((product) => product.displayOrder), [1, 2, 3, 4]);
   assert.deepEqual(shopProducts.map((product) => product.price), [
     { amount: 9.99, currency: 'USD' }, { amount: 24.99, currency: 'USD' }, { amount: 24.99, currency: 'USD' },
+    { amount: 16.99, maxAmount: 19.99, currency: 'USD' },
   ]);
   assert.deepEqual(shopProducts.map((product) => product.productUrl), [
     'https://bike-bus-chico.printify.me/product/34402078',
     'https://bike-bus-chico.printify.me/product/34402305',
     'https://bike-bus-chico.printify.me/product/34402616',
+    'https://bike-bus-chico.printify.me/product/34413817',
   ]);
   assert.deepEqual(orderShopProducts([...shopProducts].reverse()), shopProducts);
   for (const product of shopProducts) {
@@ -123,6 +127,9 @@ test('malformed/unsafe URLs, missing fields and invalid availability fail explic
     { price: { amount: NaN, currency: 'USD' } },
     { price: { amount: '25', currency: 'USD' } },
     { price: { amount: 25, currency: 'XXX' } },
+    { price: { amount: 25, maxAmount: 24, currency: 'USD' } },
+    { price: { amount: 25, maxAmount: NaN, currency: 'USD' } },
+    { price: { amount: 25, maxAmount: '30', currency: 'USD' } },
   ]) assert.throws(() => validateShopProducts([{ ...available, ...overrides }]), ShopConfigurationError);
   assert.throws(() => validateShopProducts([]), ShopConfigurationError);
   assert.throws(() => validateShopProducts([available, { ...unavailable, id: available.id }]), /id.*unique/);
@@ -130,6 +137,8 @@ test('malformed/unsafe URLs, missing fields and invalid availability fail explic
 });
 
 test('explicit prices use major units and their currency, including zero and zero-decimal currencies', () => {
+  assert.equal(formatShopPrice({ amount: 16.99, maxAmount: 19.99, currency: 'USD' }), 'From $16.99');
+  assert.equal(formatShopPrice({ amount: 16.99, maxAmount: 16.99, currency: 'USD' }), '$16.99');
   for (const [amount, currency, expected] of [
     [25.5, 'USD', '$25.50'], [7.25, 'CAD', 'CA$7.25'],
     [2500, 'JPY', '\u00a52,500'], [0, 'USD', '$0.00'],
@@ -206,10 +215,11 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     assert.ok(!initialHtml.includes('For the ride.'));
     assert.ok(!initialHtml.includes('And the everyday.'));
     assert.ok(!initialHtml.includes('<form'));
-    assert.equal((initialHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 3);
-    assert.equal((initialHtml.match(/>Choose options &amp; buy /g) ?? []).length, 3);
-    assert.equal((initialHtml.match(/Shipping calculated at checkout/g) ?? []).length, 3);
-    assert.equal((initialHtml.match(/>Available<\/span>/g) ?? []).length, 3);
+    assert.equal((initialHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 4);
+    assert.equal((initialHtml.match(/>Choose options &amp; buy /g) ?? []).length, 4);
+    assert.equal((initialHtml.match(/Shipping calculated at checkout/g) ?? []).length, 4);
+    assert.equal((initialHtml.match(/>Available<\/span>/g) ?? []).length, 4);
+    assert.match(initialHtml, />From \$16\.99<\/p>/);
     assert.ok(!initialHtml.includes('>View details '));
     assert.ok(!initialHtml.includes('Products are currently coming soon'));
     assert.ok(!initialHtml.includes('target="_blank"'));
@@ -217,7 +227,7 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     assert.match(initialHtml, /Made for the school ride and wherever the road takes you\./);
     assert.match(initialHtml, /Our gear helps celebrate the families, friendships, and community that make Bike Bus Chico possible\./);
     assert.match(initialHtml, />\$9\.99<\/p>/);
-    assert.equal((productionHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 3);
+    assert.equal((productionHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 4);
     for (const product of shopProducts) {
       assert.ok(initialHtml.includes(product.productUrl));
       assert.deepEqual(readFileSync(join(staged.directory, product.image.src.slice(1))), readFileSync(join('public', product.image.src.slice(1))), 'Mockups must remain unchanged in staged output');
