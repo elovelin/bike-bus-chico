@@ -142,11 +142,18 @@ python tests\school_design_browser.py --url http://127.0.0.1:8783 --artifacts "$
 ### Staged merchandise shop (not published)
 
 `/shop/` is opt-in, following the existing review-route staging pattern.
-Normal builds and dev sessions omit it unless `SHOP_STAGED=1`. It always uses
-the shared header/footer, has `noindex, nofollow`, is excluded from the sitemap,
-and is absent from public navigation. Staging is not access control: anyone with
+Normal builds and dev sessions omit it unless `SHOP_STAGED=1`. Staged output uses
+the shared header/footer, shows a staging notice, has `noindex, nofollow`, is
+excluded from the sitemap, and is absent from public navigation. Staging is not access control: anyone with
 a deployed preview URL could visit it. Do not deploy the opt-in output or set the
 gate in Cloudflare's production environment without separate approval.
+The reserved **`SHOP_LAUNCH=1` build-environment flag** supports a future,
+explicitly approved production launch: it includes the route without a staging
+notice or noindex restriction and includes it in the sitemap. Pass this flag
+in the build environment, not a dotenv file. Do not enable it now.
+Enabling both `SHOP_STAGED` and `SHOP_LAUNCH` fails the build. Neither flag is
+configured in production by this change. Public navigation remains unchanged
+even in launch output, pending approval to add the link.
 
 From an isolated worktree, preview the three products with:
 
@@ -163,18 +170,23 @@ product order and independently verified current public retail prices:
 |---|---|---|---|---|---|
 | 1 | One Mile Bidwell Park Tee | 34402078 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34402078 |
 | 2 | Bike Bus Chico Trucker Hat | 34402305 | Hat | USD 24.99 | https://bike-bus-chico.printify.me/product/34402305 |
-| 3 | Bike Bus Chico Kids' Crewneck Sweatshirt | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
+| 3 | Kids' Bike Bus Crewneck | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
 
 Following purchase activation, all three public product pages were rechecked in
-a hydrated browser on **2026-11-13 (Pacific)**. Every exposed size/color
+a hydrated browser on **2026-11-13 (Pacific)**, then freshly rechecked for final
+polish. Every exposed size/color
 combination had an enabled Add to cart button: ten Tee variants at USD 9.99,
 two Hat variants at USD 24.99, and ten Sweatshirt variants at USD 24.99.
 No variant price range was observed, so no "From" prefix is needed.
-The Hat's fresh public price and checkout item price were both USD 24.99 for
-Navy and Navy / White, not a previously reported USD 32.03.
+The Hat's fresh public price was USD 24.99 for both Navy and Navy / White;
+the selected Navy checkout item matched, not a previously reported USD 32.03.
 For each product, selecting options and adding one item reached Printify's own
 hosted checkout Contact Information form; item prices matched and checkout
 currency was USD. No customer details, order or payment were submitted.
+The Navy Hat's external checkout thumbnail still shows "No image"; the local
+approved hat mockup loads correctly. This external image-mapping issue does not
+prevent reaching checkout. Later customer, shipping and payment steps were not
+exercised.
 Each is now `available` with `productUrlVerified`, `purchaseVerified` and
 `priceVerified` explicitly `true`. Dashboard publication alone is never proof
 of purchasability. Keep products `coming_soon`/details-only when purchasing
@@ -182,6 +194,13 @@ cannot be verified, and withhold prices until their current public values
 are verified.
 The sweatshirt's public title still contains "Bicycle Kid's"; the site's display
 name follows the owner's latest exact wording above.
+The site displays USD prices as **$9.99 / $24.99 / $24.99** for US customers,
+while retaining ISO currency metadata. Other currencies retain their appropriate
+currency symbols (for example, `CA$` for Canadian dollars).
+Categories stay in the configuration but are not repeated on the cards.
+Product copy and the compact "Made for the ride. Priced for our families."
+mission section follow the owner's approved wording, without donation or
+proceeds claims.
 
 The three main product mockups from these exact public pages are copied unchanged
 under `public/shop/`: `one-mile-bidwell-park-tee-34402078.jpg` (2048x2048),
@@ -248,7 +267,8 @@ payment and fulfillment happen in the Printify Pop-Up Store, not on Bike Bus
 Chico; no Bike Bus Chico website account is needed. No store URL is invented.
 Configuration remains provider-independent: there is no supplier API,
 Shopify/Fourthwall integration, onsite cart, payment processor or token requirement.
-`.env.example` contains only the local `SHOP_STAGED` gate.
+`.env.example` enables only the local `SHOP_STAGED` gate and documents the
+reserved launch flag without enabling it.
 
 **Static hosting limitation:** product information is maintained explicitly in
 the catalog and updated by rebuilding approved preview output. Final pricing
@@ -259,19 +279,38 @@ Run the configuration/rendering checks with `npm run test:shop` (Node 22.18+ for
 native TypeScript loading), plus `npm run check`. Test-only catalog fixtures
 and real Astro output stay in temporary directories, never in `dist/`. The
 checks cover safe URLs, explicit verification and availability boundaries,
-currency-aware prices, staging/indexing rules and preservation of public pages.
+currency-aware prices, ordinary/staged/explicit-launch indexing rules, conflicting
+mode rejection and preservation of public pages.
 They also use the existing Python Playwright + Edge tooling to check synthetic
 configured cards on mobile/desktop, single-stop keyboard access, same-tab
-navigation, no-JS behavior and shipping notes. No test product is written to
+navigation, no-JS behavior and shipping notes. The real preview check covers
+320/375/390/768/1440px, desktop card/price/button alignment, full-width tap targets,
+meaningful lazy-loaded images with reserved dimensions, text contrast, visible
+focus, reduced motion, mobile navigation and horizontal overflow. No test product is written to
 the real preview or source catalog.
-Verify an ordinary `npm run build` with `SHOP_STAGED` unset has no `dist\shop`
-output. Then build
-with the gate enabled and check responsive no-config screenshots and keyboard
+Verify an ordinary `npm run build` with both flags unset has no
+`dist\shop\index.html` (the approved static mockups still copy). Then build
+with the staging gate enabled and check responsive screenshots and keyboard
 behavior using the existing Python Playwright + Edge tooling:
 
 ```powershell
 python tests\shop_browser.py --url http://127.0.0.1:4321 --artifacts "$env:TEMP\bike-bus-shop-review"
 ```
+
+#### Final launch checklist (approval outstanding)
+
+- Obtain explicit approval to publish `/shop/` and add its public navigation link.
+- Recheck all three exact public URLs, current variant prices and Add to cart/
+  hosted checkout reachability; reset verification flags for any unavailable,
+  changed or unverified product. Do not enter customer details or place an order.
+- Review Printify's Navy Hat checkout thumbnail mapping; the public sweatshirt
+  title is longer than the owner's chosen site display title.
+- After approval only, leave `SHOP_STAGED` unset and pass `SHOP_LAUNCH=1` in the
+  intended production build environment. Add the `/shop/` link to the existing
+  navigation separately; no navigation is activated by this work.
+- Confirm approved launch output has no staging notice/noindex, includes
+  `/shop/` in the sitemap, retains working same-tab product links and passes
+  mobile/keyboard checks before publishing through the existing release process.
 
 ### 3. Photos
 

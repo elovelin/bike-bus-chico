@@ -3,26 +3,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { canPurchaseProduct, canViewProductDetails, formatShopPrice, orderShopProducts, shopProducts, validateShopProducts, type ShopProduct } from '../../data/shop';
 
 export function getStaticPaths() {
-  if ((process.env.SHOP_STAGED ?? import.meta.env.SHOP_STAGED) !== '1') return [];
+  const staged = (process.env.SHOP_STAGED ?? import.meta.env.SHOP_STAGED) === '1';
+  const launched = process.env.SHOP_LAUNCH === '1';
+  if (staged && launched) throw new Error('Use only one shop build mode: SHOP_STAGED or SHOP_LAUNCH.');
+  if (!staged && !launched) return [];
   validateShopProducts(shopProducts);
-  return [{ params: { path: undefined }, props: { products: orderShopProducts(shopProducts) } }];
+  return [{ params: { path: undefined }, props: { products: orderShopProducts(shopProducts), staged } }];
 }
 
-interface Props { products: readonly ShopProduct[] }
-const { products } = Astro.props;
+interface Props { products: readonly ShopProduct[]; staged: boolean }
+const { products, staged } = Astro.props;
 const hasPurchaseLinks = products.some(canPurchaseProduct);
 const hasProductLinks = products.some(canViewProductDetails);
 const allComingSoon = products.every((product) => product.status === 'coming_soon');
 ---
-<BaseLayout title="Wear the ride." description="Bike Bus Chico gear for kids, families, ride leaders, and supporters. Made for the school ride and wherever the road takes you." path="/shop/" noindex>
+<BaseLayout title="Wear the ride." description="Bike Bus Chico gear for kids, families, ride leaders, and supporters. Made for the school ride and wherever the road takes you." path="/shop/" noindex={staged}>
   <section class="page-heading shop-heading"><div class="wrap">
     <p class="eyebrow">Bike Bus Chico shop</p>
     <h1>Wear the ride.</h1>
     <p class="lede">Bike Bus Chico gear for kids, families, ride leaders, and supporters. Made for the school ride and wherever the road takes you.</p>
-    <p class="notice shop-notice"><strong>Staged preview.</strong> This shop is not launched or linked in public navigation.
+    {staged && <p class="notice shop-notice"><strong>Staged preview.</strong> This shop is not launched or linked in public navigation.
       {!hasPurchaseLinks && (allComingSoon ? ' Products are coming soon; purchase buttons are not enabled.' : ' Purchase buttons are not enabled in this preview.')}
       {hasPurchaseLinks && ' Choose options and buy in our Printify Pop-Up Store.'}
-    </p>
+    </p>}
   </div></section>
   <section class="section shop-section" aria-labelledby="merch-heading"><div class="wrap">
     <h2 class="sr-only" id="merch-heading">Bike Bus Chico merchandise</h2>
@@ -45,8 +48,8 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
           <div class="shop-card-content">
             <span class="status">{{ coming_soon: 'Coming soon', available: 'Available', 'sold-out': 'Sold out' }[product.status]}</span>
             <h3>{product.name}</h3>
-            <p class="shop-category">{product.category}</p>
-            <p>{product.description}</p>
+            <p class="shop-description">{product.description}</p>
+            <div class="shop-card-footer">
             {product.priceVerified && product.price && <div class="shop-pricing">
               <p class="shop-price">{formatShopPrice(product.price)}</p>
               <p class="shop-shipping">Shipping calculated at checkout</p>
@@ -54,6 +57,7 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
             {linked && (
               <span class:list={['button', 'shop-action', { 'shop-buy': purchasable }]}>{purchasable ? 'Choose options & buy' : 'View details'} <span aria-hidden="true">&#8599;</span></span>
             )}
+            </div>
           </div>
           </CardContent>
         </article>
@@ -62,20 +66,22 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
     </div>
     {hasProductLinks && <p class="shop-checkout-note">Product details open in our Printify Pop-Up Store. {hasPurchaseLinks ? 'Choose your options and complete your purchase there.' : allComingSoon ? 'Products are currently coming soon; ordering is not yet available.' : 'Purchase buttons are not enabled in this preview; check product availability there.'} Printify handles options, cart, payments, and fulfillment when purchasing is enabled. No Bike Bus Chico website account is needed. Final prices, availability, shipping, and tax are confirmed there.</p>}
   </div></section>
-  <section class="section section-white" aria-labelledby="shop-community-heading"><div class="wrap shop-community">
-    <p class="eyebrow">More than the morning ride</p>
-    <h2 id="shop-community-heading">More than merchandise.</h2>
-    <p>We're building a community where more kids can ride to school safely, confidently, and together. Wearing Bike Bus Chico gear helps spread the word.</p>
+  <section class="section section-white shop-mission" aria-labelledby="shop-community-heading"><div class="wrap shop-community">
+    <h2 id="shop-community-heading">Made for the ride. Priced for our families.</h2>
+    <p>We believe more kids should experience the joy of biking to school. Our gear helps celebrate the families, friendships, and community that make Bike Bus Chico possible.</p>
     <a class="text-link" href="/about/">Learn about Bike Bus Chico <span aria-hidden="true">&#8599;</span></a>
   </div></section>
 </BaseLayout>
 
 <style>
-  .shop-heading{padding-bottom:20px}
+  .shop-heading{padding-top:44px;padding-bottom:16px}
+  .shop-heading h1{margin-bottom:16px}
+  .shop-heading .eyebrow{margin-bottom:12px}
   .shop-heading + .shop-section{padding-top:0}
-  .shop-notice{max-width:690px;margin-bottom:0}
+  .shop-notice{max-width:690px;margin-top:16px;margin-bottom:0;padding:12px 16px}
   .shop-grid{display:grid;grid-template-columns:1fr;gap:24px}
-  .shop-card{padding:0;overflow:hidden}
+  .shop-card{padding:0;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+  .shop-card:has(a.shop-card-body:hover){border-color:var(--blue);box-shadow:0 5px 16px #12306e12}
   .shop-card-body{display:flex;flex-direction:column;height:100%}
   a.shop-card-body:focus-visible{outline:3px solid var(--blue);outline-offset:-3px;border-radius:13px}
   .shop-placeholder,.shop-image{aspect-ratio:4/3;background:var(--sidewalk);display:flex;align-items:center;justify-content:center}
@@ -85,19 +91,24 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
   .shop-image img{width:100%;height:100%;object-fit:contain}
   .shop-card-content{padding:24px;display:flex;flex-direction:column;flex:1}
   .shop-card .status{align-self:flex-start}
-  .shop-card h3{color:var(--blue);margin:18px 0 16px;font-size:34px;overflow-wrap:anywhere}
+  .shop-card h3{color:var(--blue);margin:16px 0 12px;font-size:clamp(28px,2.6vw,34px);overflow-wrap:normal}
   .shop-card p{font-size:14px}
-  .shop-card .shop-category{font-size:12px;font-family:var(--label);margin-top:-8px}
-  .shop-card-content>p:last-child{margin-bottom:0}
-  .shop-pricing{margin-top:auto}
+  .shop-description{margin:0}
+  .shop-card-footer{margin-top:auto;padding-top:20px}
+  .shop-pricing>p:first-child{margin-top:0}
   .shop-price{font-family:var(--label);font-weight:800;margin-bottom:4px}
   .shop-card .shop-shipping{font-size:12px;margin-bottom:0}
   .shop-card .button{width:100%}
-  .shop-action{margin-top:20px}
+  .shop-card .shop-action{margin-top:16px;padding-inline:12px;gap:10px;transform:none}
+  a.shop-card-body:hover .shop-action,a.shop-card-body:focus-visible .shop-action{background:var(--navy);border-color:var(--navy)}
   .shop-checkout-note{font-size:12px;margin:18px 0 0}
   .shop-community{max-width:850px}
-  .shop-community h2{margin-bottom:24px}
+  .shop-mission{padding:40px 0}
+  .shop-community h2{color:var(--blue);font-size:clamp(30px,3.2vw,40px);margin-bottom:16px}
   .shop-community>p:not(.eyebrow){max-width:690px}
+  @media(max-width:760px){
+    .shop-heading{padding-top:28px}
+  }
   @media(min-width:761px){
     .shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .shop-card-content{padding:30px}

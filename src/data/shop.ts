@@ -19,7 +19,7 @@ export const shopProducts: readonly ShopProduct[] = [
   {
     id: '34402078',
     name: 'One Mile Bidwell Park Tee',
-    description: 'A youth T-shirt featuring the One Mile Bidwell Park Bike Bus Chico design.',
+    description: "Celebrate Chico's One Mile Recreation Area with this colorful youth tee featuring a Bike Bus ride through Bidwell Park.",
     image: { src: '/shop/one-mile-bidwell-park-tee-34402078.jpg', alt: 'White youth tee with the Bike Bus Chico rider crossing a Bidwell Park bridge design.', width: 2048, height: 2048 },
     price: { amount: 9.99, currency: 'USD' },
     priceVerified: true,
@@ -33,7 +33,7 @@ export const shopProducts: readonly ShopProduct[] = [
   {
     id: '34402305',
     name: 'Bike Bus Chico Trucker Hat',
-    description: 'A trucker hat featuring the Bike Bus Chico rider and wordmark.',
+    description: 'Show your Bike Bus Chico pride on the school ride and beyond with our classic trucker hat.',
     image: { src: '/shop/bike-bus-chico-trucker-hat-34402305.png', alt: 'Navy trucker hat with a white and orange Bike Bus Chico rider and wordmark.', width: 2000, height: 2000 },
     price: { amount: 24.99, currency: 'USD' },
     priceVerified: true,
@@ -46,8 +46,8 @@ export const shopProducts: readonly ShopProduct[] = [
   },
   {
     id: '34402616',
-    name: "Bike Bus Chico Kids' Crewneck Sweatshirt",
-    description: 'A youth crewneck sweatshirt featuring the bicycle-shaped Bike Bus Chico wordmark.',
+    name: "Kids' Bike Bus Crewneck",
+    description: 'A cozy layer for chilly school mornings, featuring our bicycle-inspired Bike Bus Chico wordmark.',
     image: { src: '/shop/bike-bus-chico-kids-crewneck-34402616.jpg', alt: 'White kids crewneck sweatshirt with the blue and orange bicycle-shaped Bike Bus Chico wordmark.', width: 2048, height: 2048 },
     price: { amount: 24.99, currency: 'USD' },
     priceVerified: true,
@@ -170,6 +170,6 @@ export function orderShopProducts(products: readonly ShopProduct[]): ShopProduct
 
 export function formatShopPrice(price: NonNullable<ShopProduct['price']>): string {
   return new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: price.currency, currencyDisplay: 'code',
+    style: 'currency', currency: price.currency, currencyDisplay: 'symbol',
   }).format(price.amount);
 }

@@ -23,7 +23,12 @@ const unavailable = {
 test('catalog matches the three products, current verified prices and independently verified purchase paths', () => {
   validateShopProducts(shopProducts);
   assert.deepEqual(shopProducts.map((product) => product.name), [
-    'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Bike Bus Chico Kids' Crewneck Sweatshirt",
+    'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Kids' Bike Bus Crewneck",
+  ]);
+  assert.deepEqual(shopProducts.map((product) => product.description), [
+    "Celebrate Chico's One Mile Recreation Area with this colorful youth tee featuring a Bike Bus ride through Bidwell Park.",
+    'Show your Bike Bus Chico pride on the school ride and beyond with our classic trucker hat.',
+    'A cozy layer for chilly school mornings, featuring our bicycle-inspired Bike Bus Chico wordmark.',
   ]);
   assert.deepEqual(shopProducts.map((product) => product.id), ['34402078', '34402305', '34402616']);
   assert.deepEqual(shopProducts.map((product) => product.category), ['Youth T-shirt', 'Hat', 'Youth sweatshirt']);
@@ -119,18 +124,18 @@ test('malformed/unsafe URLs, missing fields and invalid availability fail explic
 
 test('explicit prices use major units and their currency, including zero and zero-decimal currencies', () => {
   for (const [amount, currency, expected] of [
-    [25.5, 'USD', 'USD\u00a025.50'], [7.25, 'CAD', 'CAD\u00a07.25'],
-    [2500, 'JPY', 'JPY\u00a02,500'], [0, 'USD', 'USD\u00a00.00'],
+    [25.5, 'USD', '$25.50'], [7.25, 'CAD', 'CA$7.25'],
+    [2500, 'JPY', '\u00a52,500'], [0, 'USD', '$0.00'],
   ]) {
     validateShopProducts([{ ...available, price: { amount, currency } }]);
     assert.equal(formatShopPrice({ amount, currency }), expected);
   }
 });
 
-test('real Astro builds enforce stage/noindex/sitemap, render safe external links, reject incomplete data and preserve public pages', { timeout: 120_000 }, () => {
+test('real Astro builds enforce staging and explicit launch boundaries, render safe external links and preserve public pages', { timeout: 120_000 }, () => {
   const root = mkdtempSync(join(tmpdir(), 'bike-bus-shop-test-'));
   const baseConfig = pathToFileURL(resolve('astro.config.mjs')).href;
-  function build(name, staged, fixtures) {
+  function build(name, staged, fixtures, launched) {
     const directory = join(root, name);
     const args = [
       '--import', 'data:text/javascript,globalThis.fetch%20%3D%20()%20%3D%3E%20%7B%20throw%20new%20Error(%22Unexpected%20build-time%20network%20request%22)%3B%20%7D',
@@ -159,6 +164,8 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
     const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' };
     if (staged === undefined) delete env.SHOP_STAGED;
     else env.SHOP_STAGED = staged;
+    if (launched === undefined) delete env.SHOP_LAUNCH;
+    else env.SHOP_LAUNCH = launched;
     const result = spawnSync(process.execPath, args, {
       env, encoding: 'utf8', timeout: 30_000,
     });
@@ -173,7 +180,9 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
     const initialHtml = readFileSync(join(staged.directory, 'shop', 'index.html'), 'utf8');
     assert.match(initialHtml, /name="robots" content="noindex, nofollow"/);
     assert.match(initialHtml, /One Mile Bidwell Park Tee/);
-    assert.match(initialHtml, /Crewneck Sweatshirt/);
+    assert.match(initialHtml, /Kids&#39; Bike Bus Crewneck|Kids' Bike Bus Crewneck/);
+    assert.ok(!initialHtml.includes('class="shop-category"'));
+    assert.match(initialHtml, /Staged preview\./);
     assert.ok(!initialHtml.includes('Planned colors:'));
     assert.match(initialHtml, /id="merch-heading"/);
     assert.ok(!initialHtml.includes('For the ride.'));
@@ -186,10 +195,21 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
     assert.ok(!initialHtml.includes('>View details '));
     assert.ok(!initialHtml.includes('Products are currently coming soon'));
     assert.ok(!initialHtml.includes('target="_blank"'));
-    assert.match(initialHtml, /More than merchandise\./);
+    assert.match(initialHtml, /Made for the ride\. Priced for our families\./);
     assert.match(initialHtml, /Made for the school ride and wherever the road takes you\./);
-    assert.match(initialHtml, /Wearing Bike Bus Chico gear helps spread the word\./);
-    assert.match(initialHtml, /USD&nbsp;9\.99|USD\u00a09\.99/);
+    assert.match(initialHtml, /Our gear helps celebrate the families, friendships, and community that make Bike Bus Chico possible\./);
+    assert.match(initialHtml, />\$9\.99<\/p>/);
+    const launched = build('approved-launch-fixture', undefined, undefined, '1');
+    assert.equal(launched.result.status, 0, launched.result.stderr);
+    const launchHtml = readFileSync(join(launched.directory, 'shop', 'index.html'), 'utf8');
+    assert.ok(!launchHtml.includes('Staged preview.'));
+    assert.ok(!launchHtml.includes('class="notice shop-notice"'));
+    assert.ok(!launchHtml.includes('name="robots"'));
+    assert.ok(readFileSync(join(launched.directory, 'sitemap-0.xml'), 'utf8').includes('/shop/'));
+    assert.equal((launchHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 3);
+    const conflicting = build('conflicting-modes', '1', undefined, '1');
+    assert.notEqual(conflicting.result.status, 0);
+    assert.match(`${conflicting.result.stdout}${conflicting.result.stderr}`, /Use only one shop build mode/);
     for (const product of shopProducts) {
       assert.ok(initialHtml.includes(product.productUrl));
       assert.deepEqual(readFileSync(join(staged.directory, product.image.src.slice(1))), readFileSync(join('public', product.image.src.slice(1))), 'Mockups must remain unchanged in staged output');
@@ -210,7 +230,7 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
     assert.match(html, /href="https:\/\/external-shop\.example\.invalid\/products\/synthetic" rel="external"/);
     assert.equal((html.match(/class="button shop-action shop-buy"/g) ?? []).length, 1, 'Only a purchase-verified available product can have a purchasing CTA');
     assert.ok(!html.includes('target="_blank"'));
-    assert.match(html, /USD&nbsp;25\.50|USD\u00a025\.50/);
+    assert.match(html, />\$25\.50<\/p>/);
     assert.match(html, /Synthetic test image/);
     assert.match(html, /Shipping calculated at checkout/);
     assert.match(html, /Product details open in our Printify Pop-Up Store/);
@@ -244,6 +264,7 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
     }
     scan(staged.directory, ordinary.directory);
     scan(external.directory, ordinary.directory);
+    scan(launched.directory, ordinary.directory);
   } finally {
     rmSync(root, { recursive: true });
   }

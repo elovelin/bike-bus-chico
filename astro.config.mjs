@@ -6,7 +6,7 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://bikebuschico.org',
   integrations: [sitemap({
-    filter: (page) => !/^\/shop(?:\/|$)/.test(new URL(page).pathname),
+    filter: (page) => process.env.SHOP_LAUNCH === '1' || !/^\/shop(?:\/|$)/.test(new URL(page).pathname),
   })],
   build: {
     inlineStylesheets: 'auto',
