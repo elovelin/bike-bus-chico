@@ -1,11 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site';
 import { canPurchaseProduct, canViewProductDetails, formatShopPrice, orderShopProducts, shopProducts, validateShopProducts, type ShopProduct } from '../../data/shop';
 
 export function getStaticPaths() {
   const staged = (process.env.SHOP_STAGED ?? import.meta.env.SHOP_STAGED) === '1';
-  const launched = process.env.SHOP_LAUNCH === '1';
-  if (staged && launched) throw new Error('Use only one shop build mode: SHOP_STAGED or SHOP_LAUNCH.');
+  const launched = site.shopPublished;
   if (!staged && !launched) return [];
   validateShopProducts(shopProducts);
   return [{ params: { path: undefined }, props: { products: orderShopProducts(shopProducts), staged } }];
@@ -76,6 +76,7 @@ const allComingSoon = products.every((product) => product.status === 'coming_soo
 <style>
   .shop-heading{padding-top:44px;padding-bottom:16px}
   .shop-heading h1{margin-bottom:16px}
+  .shop-heading .lede{margin-bottom:0}
   .shop-heading .eyebrow{margin-bottom:12px}
   .shop-heading + .shop-section{padding-top:0}
   .shop-notice{max-width:690px;margin-top:16px;margin-bottom:0;padding:12px 16px}

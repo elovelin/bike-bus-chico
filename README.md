@@ -139,21 +139,21 @@ comparisons with:
 python tests\school_design_browser.py --url http://127.0.0.1:8783 --artifacts "$env:TEMP\bike-bus-school-options"
 ```
 
-### Staged merchandise shop (not published)
+### Merchandise shop
 
-`/shop/` is opt-in, following the existing review-route staging pattern.
-Normal builds and dev sessions omit it unless `SHOP_STAGED=1`. Staged output uses
-the shared header/footer, shows a staging notice, has `noindex, nofollow`, is
-excluded from the sitemap, and is absent from public navigation. Staging is not access control: anyone with
-a deployed preview URL could visit it. Do not deploy the opt-in output or set the
-gate in Cloudflare's production environment without separate approval.
-The reserved **`SHOP_LAUNCH=1` build-environment flag** supports a future,
-explicitly approved production launch: it includes the route without a staging
-notice or noindex restriction and includes it in the sitemap. Pass this flag
-in the build environment, not a dotenv file. Do not enable it now.
-Enabling both `SHOP_STAGED` and `SHOP_LAUNCH` fails the build. Neither flag is
-configured in production by this change. Public navigation remains unchanged
-even in launch output, pending approval to add the link.
+The owner approved publication of `/shop` and its desktop/mobile navigation link.
+**`site.shopPublished: true` in `src/data/site.ts`** persistently enables the
+shop in ordinary `npm run build` output, using the existing main -> Cloudflare
+Pages workflow without changing production environment settings. The shared
+navigation places Shop immediately before About and keeps Find your ride as
+the primary CTA. Production output has no staging notice/noindex and includes
+the shop in the sitemap.
+
+Optional **`SHOP_STAGED=1`** previews retain the notice, `noindex, nofollow`
+and sitemap exclusion, even after publication. Leave this flag unset in
+production. Setting `site.shopPublished` to `false` omits the shop from normal
+builds and navigation, while the staging flag still permits local previews.
+Staging is not access control: anyone with a deployed preview URL could visit it.
 
 From an isolated worktree, preview the three products with:
 
@@ -267,20 +267,24 @@ payment and fulfillment happen in the Printify Pop-Up Store, not on Bike Bus
 Chico; no Bike Bus Chico website account is needed. No store URL is invented.
 Configuration remains provider-independent: there is no supplier API,
 Shopify/Fourthwall integration, onsite cart, payment processor or token requirement.
-`.env.example` enables only the local `SHOP_STAGED` gate and documents the
-reserved launch flag without enabling it.
+`.env.example` enables only the optional local `SHOP_STAGED` preview.
 
 **Static hosting limitation:** product information is maintained explicitly in
-the catalog and updated by rebuilding approved preview output. Final pricing
-and stock are confirmed in the external shop. Approval to publish `/shop/`,
-expose it in navigation or enable a production build is still outstanding.
+the catalog and updated by rebuilding the website. **Printify product edits do
+not automatically update website prices, descriptions, images or availability.**
+Edit `src/data/shop.ts`: update `price.amount`/`currency`, `description`, genuine
+`image` asset/alt/dimensions, `status` and `productUrl` as appropriate; reset and
+recheck verification flags whenever those facts change. Use `coming_soon` or
+`sold-out` to remove purchase controls. Final pricing and stock are confirmed
+in the external shop. Run checks and publish through the established main ->
+Cloudflare Pages workflow after verifying the updated products.
 
 Run the configuration/rendering checks with `npm run test:shop` (Node 22.18+ for
 native TypeScript loading), plus `npm run check`. Test-only catalog fixtures
 and real Astro output stay in temporary directories, never in `dist/`. The
 checks cover safe URLs, explicit verification and availability boundaries,
-currency-aware prices, ordinary/staged/explicit-launch indexing rules, conflicting
-mode rejection and preservation of public pages.
+currency-aware prices, approved production/staged/unpublished indexing rules,
+navigation order and preservation of public pages.
 They also use the existing Python Playwright + Edge tooling to check synthetic
 configured cards on mobile/desktop, single-stop keyboard access, same-tab
 navigation, no-JS behavior and shipping notes. The real preview check covers
@@ -288,26 +292,25 @@ navigation, no-JS behavior and shipping notes. The real preview check covers
 meaningful lazy-loaded images with reserved dimensions, text contrast, visible
 focus, reduced motion, mobile navigation and horizontal overflow. No test product is written to
 the real preview or source catalog.
-Verify an ordinary `npm run build` with both flags unset has no
-`dist\shop\index.html` (the approved static mockups still copy). Then build
-with the staging gate enabled and check responsive screenshots and keyboard
+Verify an ordinary `npm run build` with `SHOP_STAGED` unset includes
+`dist\shop\index.html` without preview notices or noindex, and omits `dist\review`.
+Check production-mode responsive screenshots and keyboard
 behavior using the existing Python Playwright + Edge tooling:
 
 ```powershell
-python tests\shop_browser.py --url http://127.0.0.1:4321 --artifacts "$env:TEMP\bike-bus-shop-review"
+python tests\shop_browser.py --production --url http://127.0.0.1:4321 --artifacts "$env:TEMP\bike-bus-shop-review"
 ```
 
-#### Final launch checklist (approval outstanding)
+#### Release checklist
 
-- Obtain explicit approval to publish `/shop/` and add its public navigation link.
+- Publication and the Shop navigation link have owner approval.
 - Recheck all three exact public URLs, current variant prices and Add to cart/
   hosted checkout reachability; reset verification flags for any unavailable,
   changed or unverified product. Do not enter customer details or place an order.
 - Review Printify's Navy Hat checkout thumbnail mapping; the public sweatshirt
   title is longer than the owner's chosen site display title.
-- After approval only, leave `SHOP_STAGED` unset and pass `SHOP_LAUNCH=1` in the
-  intended production build environment. Add the `/shop/` link to the existing
-  navigation separately; no navigation is activated by this work.
+- Leave `SHOP_STAGED` unset; normal builds use the approved persistent
+  `site.shopPublished` setting. Do not change DNS, domains or SSL.
 - Confirm approved launch output has no staging notice/noindex, includes
   `/shop/` in the sitemap, retains working same-tab product links and passes
   mobile/keyboard checks before publishing through the existing release process.

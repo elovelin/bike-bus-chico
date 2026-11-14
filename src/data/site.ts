@@ -27,6 +27,7 @@ export interface CallToAction {
 export const site = {
   name: 'Bike Bus Chico',
   domain: 'https://bikebuschico.org',
+  shopPublished: true,
   tagline: 'Ride to School Together',
   description:
     'Bike Bus Chico brings kids and families together to ride to school as a group — building community, confidence, and better mornings on two wheels.',
@@ -46,6 +47,7 @@ export const nav: NavItem[] = [
   { label: 'Find a Bike Bus', href: '/routes/' },
   { label: 'Ride With Us', href: '/ride/' },
   { label: 'Start a Bike Bus', href: '/start-a-route/' },
+  ...(site.shopPublished ? [{ label: 'Shop', href: '/shop' }] : []),
   { label: 'About', href: '/about/' },
 ];
 

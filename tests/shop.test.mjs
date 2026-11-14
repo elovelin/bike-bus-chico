@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { canPurchaseProduct, canViewProductDetails, formatShopPrice, orderShopProducts, shopProducts, ShopConfigurationError, validateShopProducts } from '../src/data/shop.ts';
+import { nav, headerCta, site } from '../src/data/site.ts';
 
 // Synthetic test-only details; never supplied as merchandise or written into dist/.
 const available = {
@@ -21,6 +22,12 @@ const unavailable = {
 };
 
 test('catalog matches the three products, current verified prices and independently verified purchase paths', () => {
+  assert.equal(site.shopPublished, true);
+  assert.deepEqual(nav.map(({ label, href }) => [label, href]), [
+    ['Find a Bike Bus', '/routes/'], ['Ride With Us', '/ride/'],
+    ['Start a Bike Bus', '/start-a-route/'], ['Shop', '/shop'], ['About', '/about/'],
+  ]);
+  assert.deepEqual(headerCta, { label: 'Find your ride', href: '/routes/' });
   validateShopProducts(shopProducts);
   assert.deepEqual(shopProducts.map((product) => product.name), [
     'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Kids' Bike Bus Crewneck",
@@ -135,13 +142,13 @@ test('explicit prices use major units and their currency, including zero and zer
 test('real Astro builds enforce staging and explicit launch boundaries, render safe external links and preserve public pages', { timeout: 120_000 }, () => {
   const root = mkdtempSync(join(tmpdir(), 'bike-bus-shop-test-'));
   const baseConfig = pathToFileURL(resolve('astro.config.mjs')).href;
-  function build(name, staged, fixtures, launched) {
+  function build(name, staged, fixtures, published = true) {
     const directory = join(root, name);
     const args = [
       '--import', 'data:text/javascript,globalThis.fetch%20%3D%20()%20%3D%3E%20%7B%20throw%20new%20Error(%22Unexpected%20build-time%20network%20request%22)%3B%20%7D',
       join('node_modules', 'astro', 'astro.js'), 'build', '--outDir', directory,
     ];
-    if (fixtures) {
+    if (fixtures || !published) {
       const configPath = join(root, `${name}.config.mjs`);
       writeFileSync(configPath, `
         import base from ${JSON.stringify(baseConfig)};
@@ -150,7 +157,11 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
           vite: { plugins: [{
             name: 'synthetic-shop-test-fixture', enforce: 'pre',
             transform(code, id) {
+              if (id.endsWith('/src/data/site.ts') && ${!published}) {
+                return code.replace('shopPublished: true', 'shopPublished: false');
+              }
               if (!id.endsWith('/src/data/shop.ts')) return;
+              if (!${Boolean(fixtures)}) return;
               const start = code.indexOf('export const shopProducts:');
               const end = code.indexOf('\\n];', start) + 3;
               if (start < 0 || end < 3) throw new Error('Test catalog replacement failed');
@@ -164,8 +175,6 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' };
     if (staged === undefined) delete env.SHOP_STAGED;
     else env.SHOP_STAGED = staged;
-    if (launched === undefined) delete env.SHOP_LAUNCH;
-    else env.SHOP_LAUNCH = launched;
     const result = spawnSync(process.execPath, args, {
       env, encoding: 'utf8', timeout: 30_000,
     });
@@ -174,7 +183,16 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
   try {
     const ordinary = build('ordinary');
     assert.equal(ordinary.result.status, 0, ordinary.result.stderr);
-    assert.ok(!existsSync(join(ordinary.directory, 'shop', 'index.html')), 'Normal builds must omit the staged route, even when mockup assets are copied');
+    const productionHtml = readFileSync(join(ordinary.directory, 'shop', 'index.html'), 'utf8');
+    assert.ok(!productionHtml.includes('Staged preview.'));
+    assert.ok(!productionHtml.includes('name="robots"'));
+    assert.match(productionHtml, /href="\/shop" aria-current="page">\s*Shop/);
+    assert.ok(readFileSync(join(ordinary.directory, 'sitemap-0.xml'), 'utf8').includes('/shop/'));
+    assert.ok(!existsSync(join(ordinary.directory, 'review')));
+    const hidden = build('unpublished-fixture', undefined, undefined, false);
+    assert.equal(hidden.result.status, 0, hidden.result.stderr);
+    assert.ok(!existsSync(join(hidden.directory, 'shop', 'index.html')));
+    assert.ok(!readFileSync(join(hidden.directory, 'index.html'), 'utf8').includes('href="/shop"'));
     const staged = build('staged', '1');
     assert.equal(staged.result.status, 0, staged.result.stderr);
     const initialHtml = readFileSync(join(staged.directory, 'shop', 'index.html'), 'utf8');
@@ -199,17 +217,7 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     assert.match(initialHtml, /Made for the school ride and wherever the road takes you\./);
     assert.match(initialHtml, /Our gear helps celebrate the families, friendships, and community that make Bike Bus Chico possible\./);
     assert.match(initialHtml, />\$9\.99<\/p>/);
-    const launched = build('approved-launch-fixture', undefined, undefined, '1');
-    assert.equal(launched.result.status, 0, launched.result.stderr);
-    const launchHtml = readFileSync(join(launched.directory, 'shop', 'index.html'), 'utf8');
-    assert.ok(!launchHtml.includes('Staged preview.'));
-    assert.ok(!launchHtml.includes('class="notice shop-notice"'));
-    assert.ok(!launchHtml.includes('name="robots"'));
-    assert.ok(readFileSync(join(launched.directory, 'sitemap-0.xml'), 'utf8').includes('/shop/'));
-    assert.equal((launchHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 3);
-    const conflicting = build('conflicting-modes', '1', undefined, '1');
-    assert.notEqual(conflicting.result.status, 0);
-    assert.match(`${conflicting.result.stdout}${conflicting.result.stderr}`, /Use only one shop build mode/);
+    assert.equal((productionHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 3);
     for (const product of shopProducts) {
       assert.ok(initialHtml.includes(product.productUrl));
       assert.deepEqual(readFileSync(join(staged.directory, product.image.src.slice(1))), readFileSync(join('public', product.image.src.slice(1))), 'Mockups must remain unchanged in staged output');
@@ -264,7 +272,6 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     }
     scan(staged.directory, ordinary.directory);
     scan(external.directory, ordinary.directory);
-    scan(launched.directory, ordinary.directory);
   } finally {
     rmSync(root, { recursive: true });
   }

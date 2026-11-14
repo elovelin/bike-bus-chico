@@ -15,7 +15,7 @@ def contrast_ratio(foreground, background):
     return (light + 0.05) / (dark + 0.05)
 
 
-def run(url, artifacts):
+def run(url, artifacts, production=False):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(channel="msedge", headless=True)
         for width in [320, 375, 390, 768, 1440]:
@@ -33,7 +33,10 @@ def run(url, artifacts):
                 expect(page.locator(".lede")).to_have_text(
                     "Bike Bus Chico gear for kids, families, ride leaders, and supporters. Made for the school ride and wherever the road takes you."
                 )
-                expect(page.locator('meta[name="robots"]')).to_have_attribute("content", "noindex, nofollow")
+                if production:
+                    expect(page.locator('meta[name="robots"], .shop-notice')).to_have_count(0)
+                else:
+                    expect(page.locator('meta[name="robots"]')).to_have_attribute("content", "noindex, nofollow")
                 expect(page.locator(".site-header")).to_have_count(1)
                 expect(page.locator(".site-footer")).to_have_count(1)
                 expect(page.locator(".shop-card")).to_have_count(3)
@@ -74,7 +77,12 @@ def run(url, artifacts):
                 expect(page.locator(".shop-community > p:not(.eyebrow)")).to_have_text(
                     "We believe more kids should experience the joy of biking to school. Our gear helps celebrate the families, friendships, and community that make Bike Bus Chico possible."
                 )
-                expect(page.locator('.site-header a[href^="/shop"], .site-footer a[href^="/shop"]')).to_have_count(0)
+                expect(page.locator(".nav > a")).to_have_text([
+                    "Find a Bike Bus", "Ride With Us", "Start a Bike Bus", "Shop", "About", "Find your ride ↗",
+                ])
+                expect(page.locator('.site-header a[href="/shop"]')).to_have_count(1)
+                expect(page.locator('.site-header a[href="/shop"]')).to_have_attribute("aria-current", "page")
+                expect(page.locator('.site-footer a[href^="/shop"]')).to_have_count(0)
                 assert "storefront_token" not in page.content()
                 assert "fourthwall" not in page.content().lower()
                 assert "charitable" not in page.locator("main").inner_text().lower()
@@ -94,7 +102,7 @@ def run(url, artifacts):
                     assert abs(action["width"] - (content["width"] - 2 * (30 if width >= 761 else 24))) < 1
                     assert card.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"
                     assert card.locator(".shop-action").evaluate("e => getComputedStyle(e).transform") == "none"
-                notice = page.locator(".shop-notice").bounding_box()
+                notice = page.locator(".lede" if production else ".shop-notice").bounding_box()
                 grid = page.locator(".shop-grid").bounding_box()
                 gap = grid["y"] - notice["y"] - notice["height"]
                 assert 12 <= gap <= 20, f"Excess hero-grid gap at {width}px: {gap}"
@@ -142,6 +150,9 @@ def run(url, artifacts):
                         toggle.focus()
                         page.keyboard.press("Enter")
                         expect(toggle).to_have_attribute("aria-expanded", "false")
+                        toggle.click()
+                        page.locator('.nav a[href="/shop"]').click()
+                        expect(page).to_have_url(re.compile(re.escape(url) + r"/shop/?$"))
                     else:
                         expect(page.locator(".nav a").first).to_be_visible()
                 if javascript:
@@ -275,6 +286,7 @@ if __name__ == "__main__":
     source.add_argument("--url")
     source.add_argument("--fixture-html", type=Path)
     parser.add_argument("--artifacts", type=Path)
+    parser.add_argument("--production", action="store_true")
     args = parser.parse_args()
     if args.fixture_html:
         run_fixture(args.fixture_html.resolve())
@@ -282,4 +294,4 @@ if __name__ == "__main__":
         if args.artifacts is None:
             parser.error("--artifacts is required with --url")
         args.artifacts.mkdir(parents=True, exist_ok=True)
-        run(args.url.rstrip("/"), args.artifacts)
+        run(args.url.rstrip("/"), args.artifacts, args.production)
