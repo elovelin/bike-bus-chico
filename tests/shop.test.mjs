@@ -1,49 +1,81 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { formatShopPrice, shopProducts, ShopConfigurationError, validateShopProducts } from '../src/data/shop.ts';
+import { canPurchaseProduct, canViewProductDetails, formatShopPrice, orderShopProducts, shopProducts, ShopConfigurationError, validateShopProducts } from '../src/data/shop.ts';
 
 // Synthetic test-only details; never supplied as merchandise or written into dist/.
 const available = {
-  name: 'Synthetic available product', description: 'Test fixture, not merchandise.',
+  id: 'synthetic-available', name: 'Synthetic available product', description: 'Test fixture, not merchandise.',
   image: { src: 'https://images.example.invalid/synthetic.png', alt: 'Synthetic test image', width: 800, height: 600 },
   price: { amount: 25.5, currency: 'USD' },
-  availability: 'available', purchaseUrl: 'https://external-shop.example.invalid/products/synthetic',
+  status: 'available', category: 'Synthetic category', displayOrder: 1,
+  productUrl: 'https://external-shop.example.invalid/products/synthetic', productUrlVerified: true, purchaseVerified: true,
 };
 const unavailable = {
-  ...available, name: 'Synthetic unavailable product', availability: 'sold-out',
+  ...available, id: 'synthetic-unavailable', name: 'Synthetic unavailable product', status: 'sold-out', displayOrder: 2,
 };
 
-test('initial catalog is exactly two honest non-purchasable products with planned tee colors', () => {
+test('catalog matches the three supplied products, prices, order and verified details without enabling purchases', () => {
   validateShopProducts(shopProducts);
-  assert.deepEqual(shopProducts.map((product) => product.name), ['Bike Bus Chico Trucker Hat', 'One Mile Bidwell Park Tee']);
-  assert.deepEqual(shopProducts[1].plannedColors, ['Royal Blue', 'White']);
+  assert.deepEqual(shopProducts.map((product) => product.name), [
+    'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Bike Bus Chico Kids' Crewneck Sweatshirt",
+  ]);
+  assert.deepEqual(shopProducts.map((product) => product.id), ['34402078', '34402305', '34402616']);
+  assert.deepEqual(shopProducts.map((product) => product.category), ['Youth T-shirt', 'Hat', 'Youth sweatshirt']);
+  assert.deepEqual(shopProducts.map((product) => product.displayOrder), [1, 2, 3]);
+  assert.deepEqual(shopProducts.map((product) => product.price), [
+    { amount: 9.99, currency: 'USD' }, { amount: 24.99, currency: 'USD' }, { amount: 24.99, currency: 'USD' },
+  ]);
+  assert.deepEqual(shopProducts.map((product) => product.productUrl), [
+    'https://bike-bus-chico.printify.me/product/34402078',
+    'https://bike-bus-chico.printify.me/product/34402305',
+    'https://bike-bus-chico.printify.me/product/34402616',
+  ]);
+  assert.deepEqual(orderShopProducts([...shopProducts].reverse()), shopProducts);
   for (const product of shopProducts) {
-    assert.equal(product.availability, 'coming-soon');
-    assert.equal(product.image, null);
-    assert.equal(product.price, null);
-    assert.equal(product.purchaseUrl, null);
+    assert.equal(product.status, 'coming_soon');
+    assert.ok(product.image);
+    assert.ok(existsSync(join('public', product.image.src.slice(1))));
+    assert.equal(product.productUrlVerified, true);
+    assert.equal(product.purchaseVerified, false);
+    assert.equal(canViewProductDetails(product), true);
+    assert.equal(canPurchaseProduct(product), false);
+    assert.ok(!('plannedColors' in product));
   }
 });
 
-test('accepts provider-independent HTTPS links, verified image data and explicit availability', () => {
-  for (const availability of ['coming-soon', 'available', 'sold-out']) {
-    validateShopProducts([{ ...available, availability }]);
+test('accepts safe external links but only explicit verification and availability enable purchasing', () => {
+  for (const status of ['coming_soon', 'available', 'sold-out']) {
+    const product = { ...available, status };
+    validateShopProducts([product]);
+    assert.equal(canPurchaseProduct(product), status === 'available');
   }
-  validateShopProducts([{ ...available, purchaseUrl: 'https://another-shop.example.invalid/item?color=white#details' }]);
+  validateShopProducts([{ ...available, productUrl: 'https://another-shop.example.invalid/item?color=white#details' }]);
   validateShopProducts([{ ...available, image: { ...available.image, src: '/photos/supplied-image.png' } }]);
-  validateShopProducts([{ ...unavailable, image: null, price: null, purchaseUrl: null }]);
-  for (const field of ['image', 'price', 'purchaseUrl']) {
+  validateShopProducts([{ ...unavailable, image: null, price: null, productUrl: null, productUrlVerified: false, purchaseVerified: false }]);
+  const detailsOnly = { ...available, purchaseVerified: false };
+  validateShopProducts([detailsOnly]);
+  assert.equal(canViewProductDetails(detailsOnly), true);
+  assert.equal(canPurchaseProduct(detailsOnly), false);
+  for (const productUrl of [available.productUrl, null]) {
+    const pendingVerification = { ...available, productUrl, productUrlVerified: false, purchaseVerified: false };
+    validateShopProducts([pendingVerification]);
+    assert.equal(canPurchaseProduct(pendingVerification), false);
+    assert.equal(canViewProductDetails(pendingVerification), false);
+  }
+  assert.throws(() => validateShopProducts([{ ...available, productUrlVerified: false }]), /purchaseVerified/);
+  assert.throws(() => validateShopProducts([{ ...available, productUrl: null }]), /verification requires a supplied URL/);
+  for (const field of ['image', 'price']) {
     assert.throws(() => validateShopProducts([{ ...available, [field]: null }]), /available products need/);
   }
 });
 
 test('malformed/unsafe URLs, missing fields and invalid availability fail explicitly', () => {
-  for (const purchaseUrl of [
+  for (const productUrl of [
     '', 'not a URL', '//example.invalid', '/shop/', 'http://external-shop.example.invalid',
     'javascript:alert(1)', 'data:text/html,invalid', 'https://user:password@example.invalid',
     'https:example.invalid/product', 'https:///example.invalid/product',
@@ -51,11 +83,13 @@ test('malformed/unsafe URLs, missing fields and invalid availability fail explic
     'https://bikebuschico.org/shop/', 'https://www.bikebuschico.org/shop/',
     'https://bikebuschico.org./shop/',
   ]) {
-    assert.throws(() => validateShopProducts([{ ...available, purchaseUrl }]), ShopConfigurationError);
+    assert.throws(() => validateShopProducts([{ ...available, productUrl }]), ShopConfigurationError);
   }
   for (const overrides of [
-    { name: '' }, { description: ' ' }, { availability: 'unknown' }, { purchaseUrl: undefined },
-    { image: undefined }, { price: undefined }, { plannedColors: 'Royal Blue' }, { plannedColors: [''] },
+    { id: '' }, { name: '' }, { description: ' ' }, { status: 'unknown' }, { productUrl: undefined },
+    { category: '' }, { displayOrder: 0 }, { displayOrder: 1.5 }, { displayOrder: '1' },
+    { image: undefined }, { price: undefined }, { productUrlVerified: undefined }, { productUrlVerified: 'true' },
+    { purchaseVerified: undefined }, { purchaseVerified: 'true' },
     { image: { ...available.image, src: 'javascript:alert(1)' } },
     { image: { ...available.image, src: '//example.invalid/image.png' } },
     { image: { ...available.image, src: '/../private.png' } },
@@ -71,6 +105,8 @@ test('malformed/unsafe URLs, missing fields and invalid availability fail explic
     { price: { amount: 25, currency: 'XXX' } },
   ]) assert.throws(() => validateShopProducts([{ ...available, ...overrides }]), ShopConfigurationError);
   assert.throws(() => validateShopProducts([]), ShopConfigurationError);
+  assert.throws(() => validateShopProducts([available, { ...unavailable, id: available.id }]), /id.*unique/);
+  assert.throws(() => validateShopProducts([available, { ...unavailable, displayOrder: available.displayOrder }]), /displayOrder/);
 });
 
 test('explicit prices use major units and their currency, including zero and zero-decimal currencies', () => {
@@ -123,35 +159,59 @@ test('real Astro builds enforce stage/noindex/sitemap, render safe external link
   try {
     const ordinary = build('ordinary');
     assert.equal(ordinary.result.status, 0, ordinary.result.stderr);
-    assert.ok(!readdirSync(ordinary.directory).includes('shop'));
+    assert.ok(!existsSync(join(ordinary.directory, 'shop', 'index.html')), 'Normal builds must omit the staged route, even when mockup assets are copied');
     const staged = build('staged', '1');
     assert.equal(staged.result.status, 0, staged.result.stderr);
     const initialHtml = readFileSync(join(staged.directory, 'shop', 'index.html'), 'utf8');
     assert.match(initialHtml, /name="robots" content="noindex, nofollow"/);
     assert.match(initialHtml, /One Mile Bidwell Park Tee/);
-    assert.match(initialHtml, /Royal Blue and White/);
+    assert.match(initialHtml, /Crewneck Sweatshirt/);
+    assert.ok(!initialHtml.includes('Planned colors:'));
     assert.match(initialHtml, /id="merch-heading"/);
     assert.ok(!initialHtml.includes('For the ride.'));
     assert.ok(!initialHtml.includes('And the everyday.'));
     assert.ok(!initialHtml.includes('<form'));
-    assert.ok(!initialHtml.includes('Buy in external shop'));
+    assert.ok(!initialHtml.includes('Choose size &amp; buy'));
+    assert.equal((initialHtml.match(/Shipping calculated at checkout/g) ?? []).length, 3);
+    assert.equal((initialHtml.match(/>View details /g) ?? []).length, 3);
+    assert.equal((initialHtml.match(/>Coming soon<\/span>/g) ?? []).length, 3);
+    assert.ok(!initialHtml.includes('target="_blank"'));
+    assert.match(initialHtml, /More than merchandise\./);
+    assert.match(initialHtml, /Made for the school ride and wherever the road takes you\./);
+    assert.match(initialHtml, /Wearing Bike Bus Chico gear helps spread the word\./);
+    assert.match(initialHtml, /USD&nbsp;9\.99|USD\u00a09\.99/);
+    for (const product of shopProducts) {
+      assert.ok(initialHtml.includes(product.productUrl));
+      assert.deepEqual(readFileSync(join(staged.directory, product.image.src.slice(1))), readFileSync(join('public', product.image.src.slice(1))), 'Mockups must remain unchanged in staged output');
+    }
     const external = build('external', '1', [
-      { ...available, plannedColors: ['Synthetic planned color'] },
+      available,
       unavailable,
-      { ...available, name: 'Synthetic upcoming product', availability: 'coming-soon' },
+      { ...available, id: 'synthetic-upcoming', name: 'Synthetic upcoming product', status: 'coming_soon', displayOrder: 3 },
+      { ...available, id: 'synthetic-unverified', name: 'Synthetic unverified product', productUrlVerified: false, purchaseVerified: false, displayOrder: 4 },
+      { ...available, id: 'synthetic-pending', name: 'Synthetic URL-pending product', productUrl: null, productUrlVerified: false, purchaseVerified: false, displayOrder: 5 },
+      { ...available, id: 'synthetic-details', name: 'Synthetic purchase-unverified product', purchaseVerified: false, displayOrder: 6 },
+      { ...available, id: 'synthetic-placeholder', name: 'Synthetic placeholder product', status: 'coming_soon', image: null, price: null, productUrl: null, productUrlVerified: false, purchaseVerified: false, displayOrder: 7 },
     ]);
     assert.equal(external.result.status, 0, external.result.stderr);
     const html = readFileSync(join(external.directory, 'shop', 'index.html'), 'utf8');
     assert.match(html, /href="https:\/\/external-shop\.example\.invalid\/products\/synthetic" rel="external"/);
-    assert.equal((html.match(/Buy in external shop/g) ?? []).length, 1, 'Sold-out/coming-soon products must not have purchase links');
+    assert.equal((html.match(/class="button shop-action shop-buy"/g) ?? []).length, 1, 'Only a purchase-verified available product can have a purchasing CTA');
+    assert.ok(!html.includes('target="_blank"'));
     assert.match(html, /USD&nbsp;25\.50|USD\u00a025\.50/);
     assert.match(html, /Synthetic test image/);
-    assert.match(html, /Purchases are completed in the external shop, not on this website/);
+    assert.match(html, /Shipping calculated at checkout/);
+    assert.match(html, /Product details open in our Printify Pop-Up Store/);
+    assert.equal((html.match(/Product photo coming soon\./g) ?? []).length, 1);
     assert.ok(!html.includes('Planned colors:'));
     assert.ok(!html.includes('<form'));
-    const invalid = build('invalid', '1', [{ ...available, purchaseUrl: null }]);
+    const browser = spawnSync('python', ['-u', join('tests', 'shop_browser.py'), '--fixture-html', join(external.directory, 'shop', 'index.html')], {
+      encoding: 'utf8', timeout: 60_000,
+    });
+    assert.equal(browser.status, 0, `${browser.error ?? ''}${browser.stdout}${browser.stderr}`);
+    const invalid = build('invalid', '1', [{ ...available, productUrl: null }]);
     assert.notEqual(invalid.result.status, 0);
-    assert.match(`${invalid.result.stdout}${invalid.result.stderr}`, /available products need image, price and purchaseUrl/);
+    assert.match(`${invalid.result.stdout}${invalid.result.stderr}`, /verification requires a supplied URL/);
     for (const directory of [staged.directory, external.directory]) {
       assert.ok(!readFileSync(join(directory, 'sitemap-0.xml'), 'utf8').includes('/shop'));
     }

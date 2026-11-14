@@ -148,7 +148,7 @@ and is absent from public navigation. Staging is not access control: anyone with
 a deployed preview URL could visit it. Do not deploy the opt-in output or set the
 gate in Cloudflare's production environment without separate approval.
 
-From an isolated worktree, preview the two coming-soon cards with:
+From an isolated worktree, preview the three coming-soon cards with:
 
 ```powershell
 $env:SHOP_STAGED='1'; npm run build
@@ -156,40 +156,80 @@ npm run preview -- --host 127.0.0.1 --port 4321
 ```
 
 Open `http://127.0.0.1:4321/shop/`. Alternatively, enable the same gate before
-`npm run dev`. The initial product configuration shows the requested
-Bike Bus Chico Trucker Hat and One Mile Bidwell Park Tee names and clearly labeled
-photo placeholders, without prices, product photos, product IDs or checkout links.
-Royal Blue and White are textual **planned colors** on the single Tee card,
-not separate products, purchasable variants or a claim about inventory.
+`npm run dev`. The catalog uses the owner's exact supplied product links,
+retail prices and order:
 
-#### Configure real products and external purchase links later
+| Order | Product | ID | Category | Retail price | Verified details page |
+|---|---|---|---|---|---|
+| 1 | One Mile Bidwell Park Tee | 34402078 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34402078 |
+| 2 | Bike Bus Chico Trucker Hat | 34402305 | Hat | USD 24.99 | https://bike-bus-chico.printify.me/product/34402305 |
+| 3 | Bike Bus Chico Kids' Crewneck Sweatshirt | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
 
-Edit the typed, platform-agnostic catalog in **`src/data/shop.ts`** using only
-supplied or verified product details:
+All three public product pages were checked in a hydrated browser and showed
+**"This product is coming soon!"**, with Notify me rather than purchasing
+controls. Each starts `coming_soon`, with verified **details** links and
+`purchaseVerified: false`. Dashboard publication is not proof of purchasability.
+The sweatshirt's public title still contains "Bicycle Kid's"; the site's display
+name follows the owner's latest exact wording above.
+
+The three main product mockups from these exact public pages are copied unchanged
+under `public/shop/`: `one-mile-bidwell-park-tee-34402078.jpg` (2048x2048),
+`bike-bus-chico-trucker-hat-34402305.png` (2000x2000), and
+`bike-bus-chico-kids-crewneck-34402616.jpg` (2048x2048). They are genuine
+Printify mockups, not AI imagery, recreated artwork, cropped dashboard thumbnails,
+or recommendation images. Dimensions were checked by decoding the actual files.
+These are static local assets, not a supplier/API integration.
+
+#### Maintain product details and verify purchase activation
+
+Edit the small typed catalog in **`src/data/shop.ts`** using only the actual
+Printify Pop-Up product URLs, mockup assets and details supplied by the owner:
 
 | Field | Required value |
 |---|---|
-| `name` | Verified product name |
+| `id` | Unique real product identifier |
+| `name` | Owner-confirmed display name |
 | `description` | Verified descriptive copy; no unconfirmed funding or donation claims |
-| `image` | `null` until supplied; otherwise `{ src, alt, width, height }` using a real local `/...` asset or HTTPS image URL with meaningful alt text and original dimensions |
+| `image` | `null` until supplied; otherwise `{ src, alt, width, height }` using a genuine local `/...` asset or HTTPS image URL with meaningful alt text and original dimensions |
 | `price` | `null` until confirmed; otherwise `{ amount, currency }`, with a nonnegative major-unit amount and supported ISO currency code |
-| `availability` | `coming-soon`, `available`, or `sold-out`, explicitly confirmed rather than inferred |
-| `purchaseUrl` | `null` until supplied; otherwise the real external product/store purchase URL using HTTPS, without embedded credentials |
-| `plannedColors` | Optional textual plans, shown only while coming soon; not purchasable variants or inventory |
+| `status` | `coming_soon`, `available`, or `sold-out`, explicitly confirmed rather than inferred |
+| `category` | Owner-confirmed category |
+| `displayOrder` | Unique positive integer; cards are sorted by this value |
+| `productUrl` | `null` until supplied; otherwise the corresponding actual Printify Pop-Up product page using HTTPS, without embedded credentials |
+| `productUrlVerified` | `false` until the owner-provided product page has been checked; set `true` only after confirming it belongs to this shop and matches this product |
+| `purchaseVerified` | `false` until the actual product page supports choosing its options and proceeding into a real purchase path; this is separate from verifying a details page |
 
-Available products require a verified image, price and purchase URL. Invalid
+Available products require a supplied mockup and price. Invalid
 configuration fails the staged build explicitly instead of displaying guessed
-data or a broken purchase link. Coming-soon and sold-out products never render
-purchase links, even if a URL is supplied. Malformed URLs, unsafe schemes,
-embedded credentials, onsite purchase URLs, invalid prices/currencies and
-incomplete available products are rejected.
+data or a broken purchase link. A valid HTTPS URL is **not** proof of a verified
+Printify product page. Confirm the actual owner-supplied link opens the intended
+product and agrees with the supplied name, mockup and price before setting
+`productUrlVerified: true`. That flag alone does not enable purchasing.
+Verification is an explicit editorial approval, not an automated API check.
+Changing a URL requires resetting both flags and repeating verification.
 
-The "Buy in external shop" link is a normal accessible link, usable without
-JavaScript. Purchases, option selection, shipping, tax and payment happen in
-the external shop, not on Bike Bus Chico. **Printify Pop-Up Store is the initial
-intended destination**, but no provider or store URL is hardwired. The website
-has no supplier API, cart, payment processor, token, product-ID or variant-ID
-requirement. `.env.example` contains only the local `SHOP_STAGED` gate.
+Verified URLs enable a clickable **"View details"** card, including for
+`coming_soon` products. Only `available` products with a verified supplied URL
+**and `purchaseVerified: true`** show **"Choose size & buy"**. Resolve the
+external shop's coming-soon state, verify actual option selection and its
+purchase path, then update status and purchase verification explicitly.
+Coming-soon and sold-out products never have purchasing controls.
+The entire linked card is one
+accessible anchor, with a styled button-like label rather than a nested button
+or a duplicate keyboard stop. Links open in the **same tab**, with or without
+JavaScript. Unverified and missing URLs have no link or purchase button.
+A details-verification flag without a URL, or purchase verification without a
+verified details URL, fails the staged build.
+Malformed URLs, unsafe schemes, embedded credentials, onsite purchase URLs,
+invalid prices/currencies and incomplete available products are rejected.
+
+**"Shipping calculated at checkout"** appears next to supplied prices; it is
+not shown when no price is known. Size selection, purchases, shipping, tax and
+payment and fulfillment happen in the Printify Pop-Up Store, not on Bike Bus
+Chico; no Bike Bus Chico website account is needed. No store URL is invented.
+Configuration remains provider-independent: there is no supplier API,
+Shopify/Fourthwall integration, onsite cart, payment processor or token requirement.
+`.env.example` contains only the local `SHOP_STAGED` gate.
 
 **Static hosting limitation:** product information is maintained explicitly in
 the catalog and updated by rebuilding approved preview output. Final pricing
@@ -199,8 +239,12 @@ expose it in navigation or enable a production build is still outstanding.
 Run the configuration/rendering checks with `npm run test:shop` (Node 22.18+ for
 native TypeScript loading), plus `npm run check`. Test-only catalog fixtures
 and real Astro output stay in temporary directories, never in `dist/`. The
-checks cover safe URLs, availability boundaries, currency-aware prices,
-staging/indexing rules, external links and preservation of other public pages.
+checks cover safe URLs, explicit verification and availability boundaries,
+currency-aware prices, staging/indexing rules and preservation of public pages.
+They also use the existing Python Playwright + Edge tooling to check synthetic
+configured cards on mobile/desktop, single-stop keyboard access, same-tab
+navigation, no-JS behavior and shipping notes. No test product is written to
+the real preview or source catalog.
 Verify an ordinary `npm run build` with `SHOP_STAGED` unset has no `dist\shop`
 output. Then build
 with the gate enabled and check responsive no-config screenshots and keyboard
