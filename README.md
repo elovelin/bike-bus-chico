@@ -155,7 +155,7 @@ production. Setting `site.shopPublished` to `false` omits the shop from normal
 builds and navigation, while the staging flag still permits local previews.
 Staging is not access control: anyone with a deployed preview URL could visit it.
 
-From an isolated worktree, preview the four products with:
+From an isolated worktree, preview the six products with:
 
 ```powershell
 $env:SHOP_STAGED='1'; npm run build
@@ -172,6 +172,18 @@ product order and independently verified current public retail prices:
 | 2 | Bike Bus Chico Trucker Hat | 34402305 | Hat | USD 24.99 | https://bike-bus-chico.printify.me/product/34402305 |
 | 3 | Kids' Bike Bus Crewneck | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
 | 4 | Bike Bus Chico Retro Ride Tee | 34413817 | T-shirt | From USD 16.99 | https://bike-bus-chico.printify.me/product/34413817 |
+| 5 | Chico Rides Youth Tee - CCDS | 34621182 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34621182 |
+| 6 | Chico Rides Youth Tee - Parkview | 34621292 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34621292 |
+
+The two school tees were checked in hydrated public browsers on **2026-11-17
+(Pacific)**. Both offer XS, S, M, L and XL at USD 9.99 with enabled Add to cart:
+CCDS in Navy and Parkview in Forest Green. One representative option per tee
+reached its own hosted Contact Information checkout with the correct USD price
+and thumbnail. No customer details, order or payment were submitted.
+Their original primary front mockups are copied unchanged as
+`chico-rides-youth-tee-ccds-34621182.jpg` and
+`chico-rides-youth-tee-parkview-34621292.jpg` (both 2048x2048).
+These two catalog additions are prepared for local review, not yet deployed.
 
 The Retro Ride Tee was independently checked in a hydrated public browser:
 all fourteen combinations of S through 4XL and Ivory/True Navy were available.
@@ -179,7 +191,7 @@ S through 2XL cost USD 16.99; 3XL and 4XL cost USD 19.99 in either color.
 Its verified range is stored as `price.amount` and `price.maxAmount`, displaying
 **From $16.99** rather than implying one price for every size. Hosted checkout
 was reachable without entering customer details or submitting an order/payment.
-The fourth product is prepared for local review; adding it is not deployment approval.
+Catalog changes still require explicit publication approval after local review.
 
 Following purchase activation, all three public product pages were rechecked in
 a hydrated browser on **2026-11-13 (Pacific)**, then freshly rechecked for final

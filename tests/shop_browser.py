@@ -39,10 +39,11 @@ def run(url, artifacts, production=False):
                     expect(page.locator('meta[name="robots"]')).to_have_attribute("content", "noindex, nofollow")
                 expect(page.locator(".site-header")).to_have_count(1)
                 expect(page.locator(".site-footer")).to_have_count(1)
-                expect(page.locator(".shop-card")).to_have_count(4)
+                expect(page.locator(".shop-card")).to_have_count(6)
                 expect(page.locator(".shop-card h3")).to_have_text([
                     "One Mile Bidwell Park Tee", "Bike Bus Chico Trucker Hat", "Kids' Bike Bus Crewneck",
                     "Bike Bus Chico Retro Ride Tee",
+                    "Chico Rides Youth Tee - CCDS", "Chico Rides Youth Tee - Parkview",
                 ])
                 expect(page.locator(".shop-category")).to_have_count(0)
                 expect(page.locator(".shop-description")).to_have_text([
@@ -50,17 +51,19 @@ def run(url, artifacts, production=False):
                     "Show your Bike Bus Chico pride on the school ride and beyond with our classic trucker hat.",
                     "A cozy layer for chilly school mornings, featuring our bicycle-inspired Bike Bus Chico wordmark.",
                     "Celebrate riding together with retro racing stripes and our signature cyclist graphic.",
+                    "Celebrate Chico Country Day School with school-inspired lettering, a colorful bicycle wheel and the Bike Bus Chico logo.",
+                    "Celebrate Parkview Elementary with school-inspired lettering, a colorful bicycle wheel and the Bike Bus Chico logo.",
                 ])
                 expect(page.locator(".shop-planned-colors")).to_have_count(0)
                 expect(page.locator(".shop-placeholder")).to_have_count(0)
-                expect(page.locator(".shop-card .status")).to_have_text(["Available"] * 4)
+                expect(page.locator(".shop-card .status")).to_have_text(["Available"] * 6)
                 expect(page.locator(".shop-card form, .shop-card select")).to_have_count(0)
-                expect(page.locator(".shop-buy")).to_have_count(4)
-                expect(page.locator(".shop-price")).to_have_text(["$9.99", "$24.99", "$24.99", "From $16.99"])
-                expect(page.locator(".shop-shipping")).to_have_text(["Shipping calculated at checkout"] * 4)
-                expect(page.locator(".shop-action")).to_have_text(["Choose options & buy ↗"] * 4)
-                expect(page.locator(".shop-card img")).to_have_count(4)
-                for image, dimension in zip(page.locator(".shop-card img").all(), [2048, 2000, 2048, 2048]):
+                expect(page.locator(".shop-buy")).to_have_count(6)
+                expect(page.locator(".shop-price")).to_have_text(["$9.99", "$24.99", "$24.99", "From $16.99", "$9.99", "$9.99"])
+                expect(page.locator(".shop-shipping")).to_have_text(["Shipping calculated at checkout"] * 6)
+                expect(page.locator(".shop-action")).to_have_text(["Choose options & buy ↗"] * 6)
+                expect(page.locator(".shop-card img")).to_have_count(6)
+                for image, dimension in zip(page.locator(".shop-card img").all(), [2048, 2000, 2048, 2048, 2048, 2048]):
                     expect(image).to_have_attribute("loading", "lazy")
                     expect(image).to_have_attribute("width", str(dimension))
                     expect(image).to_have_attribute("height", str(dimension))
@@ -70,8 +73,8 @@ def run(url, artifacts, production=False):
                     expect(image).to_have_js_property("naturalWidth", dimension)
                     expect(image).to_have_js_property("naturalHeight", dimension)
                 links = page.locator(".shop-card a")
-                expect(links).to_have_count(4)
-                for link, product_id in zip(links.all(), ["34402078", "34402305", "34402616", "34413817"]):
+                expect(links).to_have_count(6)
+                for link, product_id in zip(links.all(), ["34402078", "34402305", "34402616", "34413817", "34621182", "34621292"]):
                     expect(link).to_have_attribute("href", f"https://bike-bus-chico.printify.me/product/{product_id}")
                     assert link.get_attribute("target") is None
                     expect(link.locator("a, button, input, select, [tabindex]")).to_have_count(0)
@@ -115,17 +118,16 @@ def run(url, artifacts, production=False):
                     for previous, following in zip(cards, cards[1:]):
                         assert following["y"] >= previous["y"] + previous["height"]
                 else:
-                    assert abs(cards[0]["y"] - cards[1]["y"]) < 1
-                    if width > 1100:
-                        assert abs(cards[0]["y"] - cards[2]["y"]) < 1
-                        assert cards[3]["y"] >= cards[0]["y"] + cards[0]["height"]
-                        assert max(card["height"] for card in cards[:3]) - min(card["height"] for card in cards[:3]) < 1
+                    columns = 3 if width > 1100 else 2
+                    for start in range(0, len(cards), columns):
+                        row = cards[start:start + columns]
+                        assert max(card["y"] for card in row) - min(card["y"] for card in row) < 1
+                        assert max(card["height"] for card in row) - min(card["height"] for card in row) < 1
+                        if start:
+                            assert row[0]["y"] >= cards[start - columns]["y"] + cards[start - columns]["height"]
                         for selector in [".shop-price", ".shop-action"]:
-                            positions = [element.bounding_box()["y"] for element in page.locator(selector).all()[:3]]
+                            positions = [element.bounding_box()["y"] for element in page.locator(selector).all()[start:start + columns]]
                             assert max(positions) - min(positions) < 1, f"Unaligned {selector}: {positions}"
-                    else:
-                        assert cards[2]["y"] >= cards[0]["y"] + cards[0]["height"]
-                        assert abs(cards[2]["y"] - cards[3]["y"]) < 1
                 page.keyboard.press("Tab")
                 expect(page.locator(".skip")).to_be_focused()
                 page.keyboard.press("Enter")

@@ -21,7 +21,7 @@ const unavailable = {
   ...available, id: 'synthetic-unavailable', name: 'Synthetic unavailable product', status: 'sold-out', displayOrder: 2,
 };
 
-test('catalog matches the four products, current verified prices and independently verified purchase paths', () => {
+test('catalog matches the six products, current verified prices and independently verified purchase paths', () => {
   assert.equal(site.shopPublished, true);
   assert.deepEqual(nav.map(({ label, href }) => [label, href]), [
     ['Find a Bike Bus', '/routes/'], ['Ride With Us', '/ride/'],
@@ -32,25 +32,31 @@ test('catalog matches the four products, current verified prices and independent
   assert.deepEqual(shopProducts.map((product) => product.name), [
     'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Kids' Bike Bus Crewneck",
     'Bike Bus Chico Retro Ride Tee',
+    'Chico Rides Youth Tee - CCDS', 'Chico Rides Youth Tee - Parkview',
   ]);
   assert.deepEqual(shopProducts.map((product) => product.description), [
     "Celebrate Chico's One Mile Recreation Area with this colorful youth tee featuring a Bike Bus ride through Bidwell Park.",
     'Show your Bike Bus Chico pride on the school ride and beyond with our classic trucker hat.',
     'A cozy layer for chilly school mornings, featuring our bicycle-inspired Bike Bus Chico wordmark.',
     'Celebrate riding together with retro racing stripes and our signature cyclist graphic.',
+    'Celebrate Chico Country Day School with school-inspired lettering, a colorful bicycle wheel and the Bike Bus Chico logo.',
+    'Celebrate Parkview Elementary with school-inspired lettering, a colorful bicycle wheel and the Bike Bus Chico logo.',
   ]);
-  assert.deepEqual(shopProducts.map((product) => product.id), ['34402078', '34402305', '34402616', '34413817']);
-  assert.deepEqual(shopProducts.map((product) => product.category), ['Youth T-shirt', 'Hat', 'Youth sweatshirt', 'T-shirt']);
-  assert.deepEqual(shopProducts.map((product) => product.displayOrder), [1, 2, 3, 4]);
+  assert.deepEqual(shopProducts.map((product) => product.id), ['34402078', '34402305', '34402616', '34413817', '34621182', '34621292']);
+  assert.deepEqual(shopProducts.map((product) => product.category), ['Youth T-shirt', 'Hat', 'Youth sweatshirt', 'T-shirt', 'Youth T-shirt', 'Youth T-shirt']);
+  assert.deepEqual(shopProducts.map((product) => product.displayOrder), [1, 2, 3, 4, 5, 6]);
   assert.deepEqual(shopProducts.map((product) => product.price), [
     { amount: 9.99, currency: 'USD' }, { amount: 24.99, currency: 'USD' }, { amount: 24.99, currency: 'USD' },
     { amount: 16.99, maxAmount: 19.99, currency: 'USD' },
+    { amount: 9.99, currency: 'USD' }, { amount: 9.99, currency: 'USD' },
   ]);
   assert.deepEqual(shopProducts.map((product) => product.productUrl), [
     'https://bike-bus-chico.printify.me/product/34402078',
     'https://bike-bus-chico.printify.me/product/34402305',
     'https://bike-bus-chico.printify.me/product/34402616',
     'https://bike-bus-chico.printify.me/product/34413817',
+    'https://bike-bus-chico.printify.me/product/34621182',
+    'https://bike-bus-chico.printify.me/product/34621292',
   ]);
   assert.deepEqual(orderShopProducts([...shopProducts].reverse()), shopProducts);
   for (const product of shopProducts) {
@@ -215,10 +221,10 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     assert.ok(!initialHtml.includes('For the ride.'));
     assert.ok(!initialHtml.includes('And the everyday.'));
     assert.ok(!initialHtml.includes('<form'));
-    assert.equal((initialHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 4);
-    assert.equal((initialHtml.match(/>Choose options &amp; buy /g) ?? []).length, 4);
-    assert.equal((initialHtml.match(/Shipping calculated at checkout/g) ?? []).length, 4);
-    assert.equal((initialHtml.match(/>Available<\/span>/g) ?? []).length, 4);
+    assert.equal((initialHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 6);
+    assert.equal((initialHtml.match(/>Choose options &amp; buy /g) ?? []).length, 6);
+    assert.equal((initialHtml.match(/Shipping calculated at checkout/g) ?? []).length, 6);
+    assert.equal((initialHtml.match(/>Available<\/span>/g) ?? []).length, 6);
     assert.match(initialHtml, />From \$16\.99<\/p>/);
     assert.ok(!initialHtml.includes('>View details '));
     assert.ok(!initialHtml.includes('Products are currently coming soon'));
@@ -227,7 +233,7 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     assert.match(initialHtml, /Made for the school ride and wherever the road takes you\./);
     assert.match(initialHtml, /Our gear helps celebrate the families, friendships, and community that make Bike Bus Chico possible\./);
     assert.match(initialHtml, />\$9\.99<\/p>/);
-    assert.equal((productionHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 4);
+    assert.equal((productionHtml.match(/class="button shop-action shop-buy"/g) ?? []).length, 6);
     for (const product of shopProducts) {
       assert.ok(initialHtml.includes(product.productUrl));
       assert.deepEqual(readFileSync(join(staged.directory, product.image.src.slice(1))), readFileSync(join('public', product.image.src.slice(1))), 'Mockups must remain unchanged in staged output');
