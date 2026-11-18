@@ -18,7 +18,7 @@ export interface ShopProduct {
 export const shopProducts: readonly ShopProduct[] = [
   {
     id: '34402078',
-    name: 'One Mile Bidwell Park Tee',
+    name: 'One Mile Bidwell Park Youth Tee',
     description: "Celebrate Chico's One Mile Recreation Area with this colorful youth tee featuring a Bike Bus ride through Bidwell Park.",
     image: { src: '/shop/one-mile-bidwell-park-tee-34402078.jpg', alt: 'White youth tee with the Bike Bus Chico rider crossing a Bidwell Park bridge design.', width: 2048, height: 2048 },
     price: { amount: 9.99, currency: 'USD' },
@@ -46,7 +46,7 @@ export const shopProducts: readonly ShopProduct[] = [
   },
   {
     id: '34402616',
-    name: "Kids' Bike Bus Crewneck",
+    name: 'Bike Bus Crewneck Youth',
     description: 'A cozy layer for chilly school mornings, featuring our bicycle-inspired Bike Bus Chico wordmark.',
     image: { src: '/shop/bike-bus-chico-kids-crewneck-34402616.jpg', alt: 'White kids crewneck sweatshirt with the blue and orange bicycle-shaped Bike Bus Chico wordmark.', width: 2048, height: 2048 },
     price: { amount: 24.99, currency: 'USD' },

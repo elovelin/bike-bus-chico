@@ -168,9 +168,9 @@ product order and independently verified current public retail prices:
 
 | Order | Product | ID | Category | Retail price | Verified details page |
 |---|---|---|---|---|---|
-| 1 | One Mile Bidwell Park Tee | 34402078 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34402078 |
+| 1 | One Mile Bidwell Park Youth Tee | 34402078 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34402078 |
 | 2 | Bike Bus Chico Trucker Hat | 34402305 | Hat | USD 24.99 | https://bike-bus-chico.printify.me/product/34402305 |
-| 3 | Kids' Bike Bus Crewneck | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
+| 3 | Bike Bus Crewneck Youth | 34402616 | Youth sweatshirt | USD 24.99 | https://bike-bus-chico.printify.me/product/34402616 |
 | 4 | Bike Bus Chico Retro Ride Tee | 34413817 | T-shirt | From USD 16.99 | https://bike-bus-chico.printify.me/product/34413817 |
 | 5 | Chico Rides Youth Tee - CCDS | 34621182 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34621182 |
 | 6 | Chico Rides Youth Tee - Parkview | 34621292 | Youth T-shirt | USD 9.99 | https://bike-bus-chico.printify.me/product/34621292 |
@@ -183,7 +183,7 @@ and thumbnail. No customer details, order or payment were submitted.
 Their original primary front mockups are copied unchanged as
 `chico-rides-youth-tee-ccds-34621182.jpg` and
 `chico-rides-youth-tee-parkview-34621292.jpg` (both 2048x2048).
-These two catalog additions are prepared for local review, not yet deployed.
+These two catalog additions were approved for publication after local review.
 
 The Retro Ride Tee was independently checked in a hydrated public browser:
 all fourteen combinations of S through 4XL and Ivory/True Navy were available.

@@ -41,7 +41,7 @@ def run(url, artifacts, production=False):
                 expect(page.locator(".site-footer")).to_have_count(1)
                 expect(page.locator(".shop-card")).to_have_count(6)
                 expect(page.locator(".shop-card h3")).to_have_text([
-                    "One Mile Bidwell Park Tee", "Bike Bus Chico Trucker Hat", "Kids' Bike Bus Crewneck",
+                    "One Mile Bidwell Park Youth Tee", "Bike Bus Chico Trucker Hat", "Bike Bus Crewneck Youth",
                     "Bike Bus Chico Retro Ride Tee",
                     "Chico Rides Youth Tee - CCDS", "Chico Rides Youth Tee - Parkview",
                 ])

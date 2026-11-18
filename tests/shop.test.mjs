@@ -30,7 +30,7 @@ test('catalog matches the six products, current verified prices and independentl
   assert.deepEqual(headerCta, { label: 'Find your ride', href: '/routes/' });
   validateShopProducts(shopProducts);
   assert.deepEqual(shopProducts.map((product) => product.name), [
-    'One Mile Bidwell Park Tee', 'Bike Bus Chico Trucker Hat', "Kids' Bike Bus Crewneck",
+    'One Mile Bidwell Park Youth Tee', 'Bike Bus Chico Trucker Hat', 'Bike Bus Crewneck Youth',
     'Bike Bus Chico Retro Ride Tee',
     'Chico Rides Youth Tee - CCDS', 'Chico Rides Youth Tee - Parkview',
   ]);
@@ -212,8 +212,8 @@ test('real Astro builds enforce staging and explicit launch boundaries, render s
     assert.equal(staged.result.status, 0, staged.result.stderr);
     const initialHtml = readFileSync(join(staged.directory, 'shop', 'index.html'), 'utf8');
     assert.match(initialHtml, /name="robots" content="noindex, nofollow"/);
-    assert.match(initialHtml, /One Mile Bidwell Park Tee/);
-    assert.match(initialHtml, /Kids&#39; Bike Bus Crewneck|Kids' Bike Bus Crewneck/);
+    assert.match(initialHtml, /One Mile Bidwell Park Youth Tee/);
+    assert.match(initialHtml, /Bike Bus Crewneck Youth/);
     assert.ok(!initialHtml.includes('class="shop-category"'));
     assert.match(initialHtml, /Staged preview\./);
     assert.ok(!initialHtml.includes('Planned colors:'));
